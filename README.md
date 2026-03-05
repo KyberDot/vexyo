@@ -1,6 +1,6 @@
 # SubTrack — Subscription Manager
 
-A self-hosted subscription tracking app built with Next.js 14, SQLite, and NextAuth.-
+A self-hosted subscription tracking app built with Next.js 14, SQLite, and NextAuth.
 
 ## Features
 
