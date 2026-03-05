@@ -9,23 +9,30 @@
   --border-color: #2D3148;
   --text: #F0F2FF;
   --muted: #8B91B5;
+  --accent: #6366F1;
+  --accent-rgb: 99, 102, 241;
 }
 
 .light {
-  --bg: #F8FAFC;
+  --bg: #F5F5F0;
   --surface: #FFFFFF;
-  --surface2: #F1F5F9;
-  --border-color: #E2E8F0;
+  --surface2: #F1F1EC;
+  --border-color: #E2E2DC;
   --text: #0F172A;
   --muted: #64748B;
+  --accent: #6366F1;
+  --accent-rgb: 99, 102, 241;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
 
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -47,7 +54,7 @@ input, textarea, select, button {
   outline: none;
   transition: border-color 0.15s;
 }
-.input:focus { border-color: #6366F1; }
+.input:focus { border-color: var(--accent); }
 
 .select {
   background: var(--surface2);
@@ -60,6 +67,7 @@ input, textarea, select, button {
   appearance: none;
   cursor: pointer;
 }
+.select:focus { border-color: var(--accent); }
 
 .card {
   background: var(--surface);
@@ -69,7 +77,7 @@ input, textarea, select, button {
 }
 
 .btn-primary {
-  background: #6366F1;
+  background: var(--accent);
   color: white;
   border: none;
   border-radius: 8px;
@@ -83,7 +91,8 @@ input, textarea, select, button {
   transition: opacity 0.15s;
   text-decoration: none;
 }
-.btn-primary:hover { opacity: 0.9; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-ghost {
   background: transparent;
@@ -96,7 +105,20 @@ input, textarea, select, button {
   cursor: pointer;
   transition: all 0.15s;
 }
-.btn-ghost:hover { border-color: #6366F1; color: #6366F1; }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-danger {
+  background: transparent;
+  border: 1px solid #EF444440;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #EF4444;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-danger:hover { background: #EF444412; }
 
 .badge {
   display: inline-flex;
@@ -125,23 +147,77 @@ input, textarea, select, button {
   text-align: left;
 }
 .nav-item:hover { background: var(--surface2); color: var(--text); }
-.nav-item.active { background: rgba(99,102,241,0.15); color: #6366F1; }
+.nav-item.active { background: rgba(var(--accent-rgb), 0.15); color: var(--accent); }
 
-.toggle-track {
-  width: 36px; height: 20px; border-radius: 10px;
-  cursor: pointer; position: relative; transition: background 0.2s;
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
 }
-.toggle-thumb {
-  position: absolute; top: 2px;
-  width: 16px; height: 16px; border-radius: 8px; background: white;
-  transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 0;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.fade-in { animation: fadeIn 0.3s ease forwards; }
+.fade-in { animation: fadeIn 0.25s ease forwards; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.8s linear infinite; }
+
+/* Page scroll fix */
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}

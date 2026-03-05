@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
   const db = getDb();
-  const fields = ["currency", "theme", "remind_3d", "remind_7d", "remind_14d"];
+  const fields = ["currency", "theme", "remind_3d", "remind_7d", "remind_14d", "monthly_budget"];
   const updates: string[] = [];
   const values: any[] = [];
   for (const f of fields) {
@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest) {
       values.push(typeof body[f] === "boolean" ? (body[f] ? 1 : 0) : body[f]);
     }
   }
-  if (updates.length === 0) return NextResponse.json({ error: "No fields" }, { status: 400 });
+  if (!updates.length) return NextResponse.json({ error: "No fields" }, { status: 400 });
   updates.push("updated_at = datetime('now')");
   values.push(userId);
   db.prepare(`UPDATE user_settings SET ${updates.join(", ")} WHERE user_id = ?`).run(...values);

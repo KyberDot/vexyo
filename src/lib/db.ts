@@ -25,6 +25,9 @@ function migrate(db: Database.Database) {
       email TEXT UNIQUE NOT NULL,
       name TEXT,
       password_hash TEXT NOT NULL,
+      avatar TEXT,
+      role TEXT DEFAULT 'user',
+      active INTEGER DEFAULT 1,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
@@ -40,13 +43,33 @@ function migrate(db: Database.Database) {
       icon TEXT,
       color TEXT DEFAULT '#6366F1',
       next_date TEXT,
-      member TEXT DEFAULT 'Me',
+      member_id INTEGER,
       notes TEXT,
       trial INTEGER DEFAULT 0,
       active INTEGER DEFAULT 1,
-      payment_method TEXT,
+      payment_method_id INTEGER,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS family_members (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      avatar TEXT,
+      color TEXT DEFAULT '#6366F1',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS payment_methods (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      label TEXT NOT NULL,
+      type TEXT DEFAULT 'card',
+      last4 TEXT,
+      brand TEXT,
+      is_default INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS notifications (
@@ -65,6 +88,16 @@ function migrate(db: Database.Database) {
       remind_3d INTEGER DEFAULT 0,
       remind_7d INTEGER DEFAULT 1,
       remind_14d INTEGER DEFAULT 0,
+      monthly_budget REAL DEFAULT 0,
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS platform_settings (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      app_name TEXT DEFAULT 'Nexyo',
+      logo TEXT,
+      primary_color TEXT DEFAULT '#6366F1',
+      allow_registration INTEGER DEFAULT 1,
       updated_at TEXT DEFAULT (datetime('now'))
     );
 
@@ -76,5 +109,14 @@ function migrate(db: Database.Database) {
       active INTEGER DEFAULT 1,
       created_at TEXT DEFAULT (datetime('now'))
     );
+
+    INSERT OR IGNORE INTO platform_settings (id) VALUES (1);
   `);
+
+  try { db.exec(`ALTER TABLE users ADD COLUMN avatar TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'`); } catch {}
+  try { db.exec(`ALTER TABLE users ADD COLUMN active INTEGER DEFAULT 1`); } catch {}
+  try { db.exec(`ALTER TABLE subscriptions ADD COLUMN member_id INTEGER`); } catch {}
+  try { db.exec(`ALTER TABLE subscriptions ADD COLUMN payment_method_id INTEGER`); } catch {}
+  try { db.exec(`ALTER TABLE user_settings ADD COLUMN monthly_budget REAL DEFAULT 0`); } catch {}
 }

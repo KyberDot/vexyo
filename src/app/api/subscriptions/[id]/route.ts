@@ -16,7 +16,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const existing = db.prepare("SELECT * FROM subscriptions WHERE id = ? AND user_id = ?").get(params.id, userId);
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const body = await req.json();
-  const fields = ["name", "amount", "currency", "cycle", "category", "icon", "color", "next_date", "member", "notes", "trial", "active", "payment_method"];
+  const fields = ["name", "amount", "currency", "cycle", "category", "icon", "color", "next_date", "member_id", "notes", "trial", "active", "payment_method_id"];
   const updates: string[] = [];
   const values: any[] = [];
   for (const f of fields) {
@@ -25,11 +25,17 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       values.push(typeof body[f] === "boolean" ? (body[f] ? 1 : 0) : body[f]);
     }
   }
-  if (updates.length === 0) return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+  if (!updates.length) return NextResponse.json({ error: "No fields" }, { status: 400 });
   updates.push("updated_at = datetime('now')");
   values.push(params.id, userId);
   db.prepare(`UPDATE subscriptions SET ${updates.join(", ")} WHERE id = ? AND user_id = ?`).run(...values);
-  const updated = db.prepare("SELECT * FROM subscriptions WHERE id = ?").get(params.id);
+  const updated = db.prepare(`
+    SELECT s.*, fm.name as member_name, pm.label as payment_method_label
+    FROM subscriptions s
+    LEFT JOIN family_members fm ON fm.id = s.member_id
+    LEFT JOIN payment_methods pm ON pm.id = s.payment_method_id
+    WHERE s.id = ?
+  `).get(params.id);
   return NextResponse.json(updated);
 }
 

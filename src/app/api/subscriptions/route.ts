@@ -13,11 +13,11 @@ const schema = z.object({
   icon: z.string().optional(),
   color: z.string().default("#6366F1"),
   next_date: z.string().optional(),
-  member: z.string().default("Me"),
+  member_id: z.number().optional().nullable(),
   notes: z.string().optional(),
   trial: z.boolean().default(false),
   active: z.boolean().default(true),
-  payment_method: z.string().optional(),
+  payment_method_id: z.number().optional().nullable(),
 });
 
 async function getUserId(req: NextRequest): Promise<number | null> {
@@ -30,7 +30,14 @@ export async function GET(req: NextRequest) {
   const userId = await getUserId(req);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = getDb();
-  const subs = db.prepare("SELECT * FROM subscriptions WHERE user_id = ? ORDER BY name").all(userId);
+  const subs = db.prepare(`
+    SELECT s.*, fm.name as member_name, pm.label as payment_method_label
+    FROM subscriptions s
+    LEFT JOIN family_members fm ON fm.id = s.member_id
+    LEFT JOIN payment_methods pm ON pm.id = s.payment_method_id
+    WHERE s.user_id = ?
+    ORDER BY s.name
+  `).all(userId);
   return NextResponse.json(subs);
 }
 
@@ -40,9 +47,15 @@ export async function POST(req: NextRequest) {
   const body = schema.parse(await req.json());
   const db = getDb();
   const r = db.prepare(`
-    INSERT INTO subscriptions (user_id, name, amount, currency, cycle, category, icon, color, next_date, member, notes, trial, active, payment_method)
+    INSERT INTO subscriptions (user_id, name, amount, currency, cycle, category, icon, color, next_date, member_id, notes, trial, active, payment_method_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(userId, body.name, body.amount, body.currency, body.cycle, body.category, body.icon || null, body.color, body.next_date || null, body.member, body.notes || null, body.trial ? 1 : 0, body.active ? 1 : 0, body.payment_method || null);
-  const sub = db.prepare("SELECT * FROM subscriptions WHERE id = ?").get(r.lastInsertRowid);
+  `).run(userId, body.name, body.amount, body.currency, body.cycle, body.category, body.icon || null, body.color, body.next_date || null, body.member_id || null, body.notes || null, body.trial ? 1 : 0, body.active ? 1 : 0, body.payment_method_id || null);
+  const sub = db.prepare(`
+    SELECT s.*, fm.name as member_name, pm.label as payment_method_label
+    FROM subscriptions s
+    LEFT JOIN family_members fm ON fm.id = s.member_id
+    LEFT JOIN payment_methods pm ON pm.id = s.payment_method_id
+    WHERE s.id = ?
+  `).get(r.lastInsertRowid);
   return NextResponse.json(sub, { status: 201 });
 }
