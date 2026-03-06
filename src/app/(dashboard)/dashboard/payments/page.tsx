@@ -145,7 +145,14 @@ export default function PaymentsPage() {
                 {/* Balance */}
                 <div style={{ padding: "10px 12px", background: "var(--surface2)", borderRadius: 8 }}>
                   <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>Balance</div>
-                  <div style={{ fontSize: 22, fontWeight: 800 }}>{sym}{fmt(m.balance || 0)}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800 }}>
+                    {sym}{fmt(m.balance || 0)}
+                    {m.currency !== settings.currency && (
+                      <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: 8, fontWeight: 600 }}>
+                        ≈ {currencySymbol}{fmt(convertToDisplay(m.balance || 0, m.currency))}
+                      </span>
+                    )}
+                  </div>
                   <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
                     <button onClick={() => { setBalanceAction(p => p?.id === m.id && p?.type === "add" ? null : { id: m.id, type: "add" }); setBalanceDelta(""); }} style={{ flex: 1, padding: "5px", borderRadius: 6, border: `1px solid ${isAdding ? "var(--accent)" : "var(--border-color)"}`, background: isAdding ? "rgba(var(--accent-rgb), 0.1)" : "transparent", color: "#10B981", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>+ Add</button>
                     <button onClick={() => { setBalanceAction(p => p?.id === m.id && p?.type === "remove" ? null : { id: m.id, type: "remove" }); setBalanceDelta(""); }} style={{ flex: 1, padding: "5px", borderRadius: 6, border: `1px solid ${isRemoving ? "rgba(239,68,68,0.5)" : "var(--border-color)"}`, background: isRemoving ? "rgba(239,68,68,0.1)" : "transparent", color: "#EF4444", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>− Remove</button>

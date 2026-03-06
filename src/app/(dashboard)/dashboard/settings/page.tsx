@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect, useRef } from "react";
 import { useState, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { useSettings } from "@/lib/SettingsContext";
@@ -113,7 +114,9 @@ export default function SettingsPage() {
 function BackupSection() {
   const [backups, setBackups] = useState<any[]>([]);
   const [creating, setCreating] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const [msg, setMsg] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     const r = await fetch("/api/backup").then(r => r.json());
@@ -131,6 +134,38 @@ function BackupSection() {
     } catch { setMsg("Error creating backup"); }
     setCreating(false);
     setTimeout(() => setMsg(""), 3000);
+  };
+
+  const restore = async (id: number) => {
+    if (!confirm("Restore this backup? This will overwrite your current data!")) return;
+    setRestoring(true);
+    try {
+      const r = await fetch("/api/backup", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "restore", id }) });
+      if (r.ok) { setMsg("Restored! Refreshing..."); setTimeout(() => window.location.reload(), 1500); }
+      else setMsg("Failed to restore backup");
+    } catch { setMsg("Error restoring backup"); }
+    setRestoring(false);
+    setTimeout(() => setMsg(""), 3000);
+  };
+
+  const handleUpload = (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!confirm("Upload and restore from this file? Your current data will be overwritten!")) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      setRestoring(true);
+      try {
+        const json = JSON.parse(ev.target?.result as string);
+        const r = await fetch("/api/backup", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "upload", data: json }) });
+        if (r.ok) { setMsg("Restored! Refreshing..."); setTimeout(() => window.location.reload(), 1500); }
+        else setMsg("Failed to restore backup");
+      } catch { setMsg("Invalid backup file"); }
+      setRestoring(false);
+      setTimeout(() => setMsg(""), 3000);
+    };
+    reader.readAsText(file);
   };
 
   const del = async (id: number) => {
@@ -154,8 +189,12 @@ function BackupSection() {
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Backup & Restore</div>
         <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 12 }}>Create and manage backups of your subscriptions, bills, and settings</div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button className="btn-primary" onClick={create} disabled={creating}>{creating ? "Creating..." : "Create Backup"}</button>
-          {msg && <span style={{ fontSize: 13, color: msg.includes("success") ? "#10B981" : "#EF4444" }}>{msg}</span>}
+          <button className="btn-primary" onClick={create} disabled={creating || restoring}>{creating ? "Creating..." : "Create Backup"}</button>
+          
+          <input ref={fileRef} type="file" accept=".json" style={{ display: "none" }} onChange={handleUpload} />
+          <button className="btn-ghost" onClick={() => fileRef.current?.click()} disabled={creating || restoring}>Upload Backup</button>
+
+          {msg && <span style={{ fontSize: 13, color: msg.includes("Restored") || msg.includes("success") ? "#10B981" : "#EF4444" }}>{msg}</span>}
         </div>
       </div>
       {backups.length === 0 ? (
@@ -167,6 +206,7 @@ function BackupSection() {
             <div style={{ fontSize: 11, color: "var(--muted)" }}>{new Date(b.created_at).toLocaleString()} · {fmtBytes(b.size)}</div>
           </div>
           <div style={{ display: "flex", gap: 6 }}>
+            <button className="btn-ghost" style={{ fontSize: 12, padding: "4px 10px", color: "var(--accent)" }} onClick={() => restore(b.id)} disabled={restoring}>↺ Restore</button>
             <button className="btn-ghost" style={{ fontSize: 12, padding: "4px 10px" }} onClick={() => download(b.id, b.filename)}>⬇ Download</button>
             <button style={{ background: "none", border: "none", color: "#EF4444", cursor: "pointer", fontSize: 13 }} onClick={() => del(b.id)}>🗑️</button>
           </div>
