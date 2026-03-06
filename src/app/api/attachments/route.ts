@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const subId = req.nextUrl.searchParams.get("sub_id");
   const debtId = req.nextUrl.searchParams.get("debt_id");
   const db = getDb();
-  let rows;
+  let rows: any[];
   if (subId) rows = db.prepare("SELECT id, name, mime_type, size, created_at FROM attachments WHERE user_id = ? AND sub_id = ?").all(userId, subId);
   else if (debtId) rows = db.prepare("SELECT id, name, mime_type, size, created_at FROM attachments WHERE user_id = ? AND debt_id = ?").all(userId, debtId);
   else rows = [];
