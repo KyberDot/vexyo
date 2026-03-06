@@ -45,8 +45,7 @@ export default function DashboardPage() {
   const upcomingRenewals = useMemo(() =>
     [...activeSubs]
       .filter(s => s.next_date && daysUntil(s.next_date) <= 7 && daysUntil(s.next_date) >= 0)
-      .sort((a, b) => new Date(a.next_date!).getTime() - new Date(b.next_date!).getTime())
-      .slice(0, 5),
+      .sort((a, b) => new Date(a.next_date!).getTime() - new Date(b.next_date!).getTime()),
     [subs]);
 
   const monthlyData = useMemo(() => {
@@ -172,7 +171,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Upcoming renewals */}
-        <div className="card">
+        <div className="card" style={{ display: "flex", flexDirection: "column", height: "fit-content", maxHeight: "400px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: 16 }}>Upcoming Renewals</div>
@@ -180,24 +179,27 @@ export default function DashboardPage() {
             </div>
             <Link href="/dashboard/subscriptions" style={{ fontSize: 13, color: accentColor, textDecoration: "none", fontWeight: 600 }}>View All →</Link>
           </div>
-          {upcomingRenewals.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "24px 0", color: "var(--muted)", fontSize: 14 }}>🎉 No renewals in the next 7 days</div>
-          ) : upcomingRenewals.map(s => {
-            const days = daysUntil(s.next_date!);
-            const dayLabel = days === 0 ? "Today" : days === 1 ? "Tomorrow" : `in ${days} days`;
-            return (
-              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border-color)" }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-                  {s.icon ? <img src={s.icon} width={28} height={28} style={{ objectFit: "contain" }} alt={s.name} onError={e => (e.currentTarget.style.display = "none")} /> : <span style={{ fontSize: 16 }}>📦</span>}
+          
+          <div style={{ overflowY: "auto", flex: 1, paddingRight: "4px" }}>
+            {upcomingRenewals.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "24px 0", color: "var(--muted)", fontSize: 14 }}>🎉 No renewals in the next 7 days</div>
+            ) : upcomingRenewals.map(s => {
+              const days = daysUntil(s.next_date!);
+              const dayLabel = days === 0 ? "Today" : days === 1 ? "Tomorrow" : `in ${days} days`;
+              return (
+                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border-color)" }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                    {s.icon ? <img src={s.icon} width={28} height={28} style={{ objectFit: "contain" }} alt={s.name} onError={e => (e.currentTarget.style.display = "none")} /> : <span style={{ fontSize: 16 }}>📦</span>}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
+                    <div style={{ fontSize: 12, color: "var(--muted)" }}>{currencySymbol}{fmt(convertToDisplay(s.amount, s.currency))} / {s.cycle === "monthly" ? "Monthly" : s.cycle}</div>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: days === 0 ? "#EF4444" : days <= 3 ? "#F59E0B" : "var(--muted)", whiteSpace: "nowrap" }}>{dayLabel}</span>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{currencySymbol}{fmt(convertToDisplay(s.amount, s.currency))} / {s.cycle === "monthly" ? "Monthly" : s.cycle}</div>
-                </div>
-                <span style={{ fontSize: 12, fontWeight: 600, color: days === 0 ? "#EF4444" : days <= 3 ? "#F59E0B" : "var(--muted)", whiteSpace: "nowrap" }}>{dayLabel}</span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
