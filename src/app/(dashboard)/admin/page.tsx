@@ -3,7 +3,7 @@ import ModalPortal from "@/components/ModalPortal";
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/Toast";
 import { useSettings } from "@/lib/SettingsContext";
-import { useSession } from "next-auth/react"; // <-- Added this import
+import { useSession } from "next-auth/react";
 
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -40,7 +40,7 @@ const TEMPLATE_VARS: Record<string, string[]> = { magic_link: ["{{appName}}", "{
 export default function AdminPage() {
   const { userRole, platform, savePlatform, t } = useSettings();
   const { success, error: toastError } = useToast();
-  const { data: session } = useSession(); // <-- Added this to get your email
+  const { data: session } = useSession();
   const [users, setUsers] = useState<any[]>([]);
   const [invites, setInvites] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
@@ -79,18 +79,25 @@ export default function AdminPage() {
   if (userRole !== "admin") return <div style={{ color: "var(--muted)", padding: 24 }}>Access denied.</div>;
 
   const savePlatformTab = async () => { setSaving(true); await savePlatform(platformForm); success("Platform settings saved"); setSaving(false); };
-  const saveMailSettings = async () => { setSaving(true); const r = await fetch("/api/platform", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(mailForm) }); if (r.ok) success("Mail settings saved"); else toastError("Failed to save mail settings"); setSaving(false); };
   
-  // <-- UPDATED THIS FUNCTION -->
+  // Accept a silent parameter to bypass UI loaders when testing emails
+  const saveMailSettings = async (silent = false) => { 
+    if (!silent) setSaving(true); 
+    const r = await fetch("/api/platform", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(mailForm) }); 
+    if (!silent) {
+      if (r.ok) success("Mail settings saved"); else toastError("Failed to save mail settings"); 
+      setSaving(false); 
+    }
+  };
+  
   const testMail = async () => { 
     const targetEmail = session?.user?.email;
-    
     if (!targetEmail) {
       toastError("Could not find your email address");
       return;
     }
 
-    await saveMailSettings(); 
+    await saveMailSettings(true); 
     setMailTest({ status: "loading", msg: "" }); 
     
     const res = await fetch("/api/admin/test-mail", { 
@@ -100,7 +107,7 @@ export default function AdminPage() {
     }); 
     
     const d = await res.json(); 
-    setMailTest({ status: res.ok ? "ok" : "error", msg: res.ok ? d.message : d.error }); 
+    setMailTest({ status: res.ok ? "ok" : "error", msg: res.ok ? (d.message || "Test email sent successfully! Check your inbox.") : d.error }); 
   };
 
   const sendInvite = async () => {
@@ -288,7 +295,7 @@ export default function AdminPage() {
             <Toggle value={!!mailForm.mail_secure} onChange={v => setMailForm((p: any) => ({ ...p, mail_secure: v }))} />
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button className="btn-primary" onClick={saveMailSettings} disabled={saving} style={{ minWidth: 100 }}>{saving ? "Saving..." : "💾 Save Settings"}</button>
+            <button className="btn-primary" onClick={() => saveMailSettings(false)} disabled={saving} style={{ minWidth: 100 }}>{saving ? "Saving..." : "💾 Save Settings"}</button>
             <button className="btn-ghost" onClick={testMail} disabled={mailTest.status === "loading"} style={{ minWidth: 130 }}>🧪 {mailTest.status === "loading" ? "Sending..." : "Send Test Email"}</button>
             <span style={{ fontSize: 11, color: "var(--muted)" }}>Test saves first</span>
           </div>

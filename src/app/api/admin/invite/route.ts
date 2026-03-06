@@ -14,15 +14,42 @@ async function isAdmin() {
   return { ok: u?.role === "admin", session: s };
 }
 
+export async function GET(req: NextRequest) {
+  const { ok } = await isAdmin();
+  if (!ok) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  
+  const db = getDb();
+  try {
+    // Joins the invites table with the users table to get the invited_by_name
+    const invites = db.prepare(`
+      SELECT i.*, u.name as invited_by_name 
+      FROM invites i 
+      LEFT JOIN users u ON i.invited_by = u.id 
+      ORDER BY i.created_at DESC
+    `).all();
+    return NextResponse.json(invites);
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   const { ok, session } = await isAdmin();
   if (!ok || !session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json();
+  const db = getDb();
+
+  // Handle the "Clear Log" action triggered by the button in the UI
+  if (body.action === "clear-log") {
+    const now = new Date().toISOString().replace("T", " ").split(".")[0];
+    db.prepare("DELETE FROM invites WHERE used > 0 OR expires_at < ?").run(now);
+    return NextResponse.json({ ok: true });
+  }
+
   const { email } = body;
   if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
 
-  const db = getDb();
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().replace("T", " ").split(".")[0];
   db.prepare("INSERT INTO invites (email, token, invited_by, expires_at) VALUES (?, ?, ?, ?)").run(email, token, (session.user as any).id, expiresAt);
@@ -48,6 +75,15 @@ export async function POST(req: NextRequest) {
       });
     } catch (e) { console.error(e); }
   }
-  return NextResponse.json({ invite_url, token });
+  return NextResponse.json({ invite_url, token, emailed: !!mail });
 }
-// ... rest of your file (GET/DELETE)
+
+export async function DELETE(req: NextRequest) {
+  const { ok } = await isAdmin();
+  if (!ok) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  
+  const { id } = await req.json();
+  getDb().prepare("DELETE FROM invites WHERE id = ?").run(id);
+  
+  return NextResponse.json({ ok: true });
+}
