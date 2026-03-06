@@ -84,7 +84,7 @@ export default function AttachmentsPanel({ subId, debtId, label = "Attachments" 
 
       {/* Attachment modal */}
       {open && (
-        <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflow: "hidden" }}
+        <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)", zIndex: 9998, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflow: "hidden" }}
           onClick={() => setOpen(false)}>
           <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", borderRadius: 14, width: "100%", maxWidth: 500, maxHeight: "80vh", display: "flex", flexDirection: "column", overflow: "hidden", border: "1px solid var(--border-color)" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
@@ -129,7 +129,7 @@ export default function AttachmentsPanel({ subId, debtId, label = "Attachments" 
 
       {/* Viewer modal */}
       {viewing && (
-        <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, overflow: "hidden" }}
+        <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, overflow: "hidden" }}
           onClick={() => setViewing(null)}>
           <div onClick={e => e.stopPropagation()} style={{ maxWidth: "90vw", maxHeight: "85vh", background: "var(--surface)", borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>

@@ -336,7 +336,7 @@ export default function AdminPage() {
 
       {/* PLAN MODAL */}
       {showPlanModal && editPlan && (
-        <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => { setShowPlanModal(false); setEditPlan(null); }}>
+        <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => { setShowPlanModal(false); setEditPlan(null); }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", borderRadius: 16, width: "100%", maxWidth: 520, maxHeight: "90vh", overflow: "auto", border: "1px solid var(--border-color)", boxShadow: "0 24px 60px rgba(0,0,0,0.5)", padding: "24px" }}>
             <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 18 }}>{editPlan.id ? "Edit Plan" : "New Plan"}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -366,7 +366,7 @@ export default function AdminPage() {
 
       {/* ASSIGN PLAN MODAL */}
       {showAssignModal && (
-        <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setShowAssignModal(null)}>
+        <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setShowAssignModal(null)}>
           <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", borderRadius: 16, width: "100%", maxWidth: 400, border: "1px solid var(--border-color)", boxShadow: "0 24px 60px rgba(0,0,0,0.5)", padding: "24px" }}>
             <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>Assign Plan</div>
             <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 18 }}>{showAssignModal.name || showAssignModal.email}</div>

@@ -144,7 +144,7 @@ export default function CategoriesPage() {
 
       {/* Modal */}
       {showModal && (
-        <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflow: "hidden" }} onClick={() => setShowModal(false)}>
+        <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflow: "hidden" }} onClick={() => setShowModal(false)}>
           <div style={{ background: "var(--surface)", borderRadius: 16, width: "100%", maxWidth: 460, maxHeight: "88vh", display: "flex", flexDirection: "column", overflow: "hidden", border: "1px solid var(--border-color)", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: "18px 22px 16px", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
               <h2 style={{ fontSize: 17, fontWeight: 700 }}>{editCat ? "Edit Category" : "Add Category"}</h2>

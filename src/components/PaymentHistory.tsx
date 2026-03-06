@@ -62,7 +62,7 @@ export default function PaymentHistory({ sub, onClose }: Props) {
   const isSoon = days !== null && days >= 0 && days <= 3;
 
   return (
-    <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflow: "hidden" }}
+    <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflow: "hidden" }}
       onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", borderRadius: 16, width: "100%", maxWidth: 480, maxHeight: "88vh", display: "flex", flexDirection: "column", border: "1px solid var(--border-color)", boxShadow: "0 24px 64px rgba(0,0,0,0.5)", overflow: "hidden" }}>
         {/* Header */}
