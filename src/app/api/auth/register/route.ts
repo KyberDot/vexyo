@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { getDb } from "@/lib/db";
 import bcrypt from "bcryptjs";
 

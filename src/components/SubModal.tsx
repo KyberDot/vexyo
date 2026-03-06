@@ -38,9 +38,8 @@ interface Props {
   onClose: () => void;
   familyMembers?: any[];
   paymentMethods?: any[];
-}
-
-export default function SubModal({ sub, defaultType = "subscription", onSave, onClose, familyMembers = [], paymentMethods = [] }: Props) {
+});
+const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onSave, onClose, familyMembers = [], paymentMethods = [] }: Props) {
   const { settings, categories } = useSettings();
   const isEditing = !!sub;
 
@@ -396,4 +395,5 @@ export default function SubModal({ sub, defaultType = "subscription", onSave, on
       </div>
     </div></ModalPortal>
   );
-}
+});
+export default SubModal;

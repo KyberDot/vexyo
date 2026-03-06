@@ -32,7 +32,7 @@ export default function LanguageSwitcher() {
         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--surface2)"}
         onMouseLeave={e => { if (!open) (e.currentTarget as HTMLElement).style.background = "none"; }}
       >
-        {current.flag}
+        🌐
       </button>
       {open && (
         <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "var(--surface)", border: "1px solid var(--border-color)", borderRadius: 10, overflow: "hidden", zIndex: 200, boxShadow: "0 8px 24px rgba(0,0,0,0.3)", minWidth: 160 }}>

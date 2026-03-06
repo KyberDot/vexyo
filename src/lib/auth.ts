@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { getDb } from "./db";
 
 export const authOptions: NextAuthOptions = {
@@ -38,7 +39,7 @@ export const authOptions: NextAuthOptions = {
         if (!user) {
           const platform = db.prepare("SELECT allow_registration FROM platform_settings WHERE id = 1").get() as any;
           if (!platform?.allow_registration) return null;
-          const r = db.prepare("INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)").run(mt.email, mt.email.split("@")[0], "");
+          const r = db.prepare("INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)").run(mt.email, mt.email.split("@")[0], `!magic:${crypto.randomBytes(16).toString("hex")}`);
           db.prepare("INSERT OR IGNORE INTO user_settings (user_id) VALUES (?)").run(r.lastInsertRowid);
           user = db.prepare("SELECT * FROM users WHERE id = ?").get(r.lastInsertRowid) as any;
         }
@@ -50,6 +51,18 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) { token.id = user.id; token.role = (user as any).role; }
+      // Enforce plan expiry for non-admin users
+      if (token.id && token.role !== "admin") {
+        try {
+          const db = getDb();
+          const u = db.prepare("SELECT active, plan_expires_at FROM users WHERE id = ?").get(token.id as number) as any;
+          if (!u?.active) token.disabled = true;
+          else if (u.plan_expires_at && new Date(u.plan_expires_at) < new Date()) {
+            db.prepare("UPDATE users SET active = 0 WHERE id = ?").run(token.id);
+            token.disabled = true;
+          }
+        } catch {}
+      }
       return token;
     },
     async session({ session, token }) {

@@ -174,13 +174,14 @@ export default function AdminPage() {
                 <div style={{ fontWeight: 600, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name || u.email}</div>
                 <div style={{ fontSize: 11, color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</div>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-                <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 4, background: u.role === "admin" ? "rgba(var(--accent-rgb),0.15)" : "var(--surface2)", color: u.role === "admin" ? "var(--accent)" : "var(--muted)", fontWeight: 600 }}>{u.role}</span>
-                {u.plan_name && <span style={{ fontSize: 10, color: "#10B981" }}>{u.plan_name}{u.plan_expires_at ? ` · ${new Date(u.plan_expires_at).toLocaleDateString()}` : ""}</span>}
-              </div>
-              <div style={{ display: "flex", gap: 4 }}>
-                <button onClick={() => setShowAssignModal(u)} style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border-color)", background: "none", color: "var(--muted)", fontSize: 11, cursor: "pointer" }}>📦 Plan</button>
-                <Toggle value={!!u.active} onChange={() => toggleUserActive(u)} />
+              <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 4, background: u.role === "admin" ? "rgba(var(--accent-rgb),0.15)" : "var(--surface2)", color: u.role === "admin" ? "var(--accent)" : "var(--muted)", fontWeight: 600 }}>{u.role}</span>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                {u.role !== "admin" && (
+                  <button onClick={() => setShowAssignModal(u)} style={{ padding: "5px 10px", borderRadius: 6, border: "1px solid var(--border-color)", background: "none", color: "var(--muted)", fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+                    {u.plan_name ? `📦 ${u.plan_name}` : "📦 Plan"}
+                  </button>
+                )}
+                {u.role !== "admin" && <Toggle value={!!u.active} onChange={() => toggleUserActive(u)} />}
               </div>
             </div>
           ))}
@@ -220,14 +221,55 @@ export default function AdminPage() {
 
       {/* PLATFORM */}
       {tab === "platform" && (
-        <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14, padding: "20px 22px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div><label style={labelStyle}>APP NAME</label><input style={inputStyle} value={platformForm.app_name || ""} onChange={e => setPlatformForm((p: any) => ({ ...p, app_name: e.target.value }))} /></div>
-            <div><label style={labelStyle}>PRIMARY COLOR</label><div style={{ display: "flex", gap: 8, alignItems: "center" }}><input type="color" value={platformForm.primary_color || "#6366F1"} onChange={e => setPlatformForm((p: any) => ({ ...p, primary_color: e.target.value }))} style={{ width: 42, height: 34, border: "none", borderRadius: 6, cursor: "pointer", background: "none" }} /><input style={{ ...inputStyle, flex: 1 }} value={platformForm.primary_color || ""} onChange={e => setPlatformForm((p: any) => ({ ...p, primary_color: e.target.value }))} /></div></div>
+        <div className="card" style={{ display: "flex", flexDirection: "column", gap: 18, padding: "20px 22px" }}>
+          {/* Preview */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: "var(--surface2)", borderRadius: 10 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: platformForm.primary_color || "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+              {platformForm.logo ? <img src={platformForm.logo} style={{ width: "100%", height: "100%", objectFit: "contain" }} alt="" onError={e => (e.currentTarget.style.display="none")} /> : <span style={{ fontSize: 22 }}>💰</span>}
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>{platformForm.app_name || "Vexyo"}</div>
+              <div style={{ fontSize: 11, color: "var(--muted)" }}>Live preview</div>
+            </div>
           </div>
-          <div><label style={labelStyle}>LOGO URL</label><input style={inputStyle} value={platformForm.logo || ""} onChange={e => setPlatformForm((p: any) => ({ ...p, logo: e.target.value }))} placeholder="https://..." /></div>
-          <div><label style={labelStyle}>FAVICON URL</label><input style={inputStyle} value={platformForm.favicon || ""} onChange={e => setPlatformForm((p: any) => ({ ...p, favicon: e.target.value }))} placeholder="https://..." /></div>
-          <div style={{ display: "flex", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div><label style={labelStyle}>APP NAME</label><input style={inputStyle} value={platformForm.app_name || ""} onChange={e => setPlatformForm((p: any) => ({ ...p, app_name: e.target.value }))} /></div>
+            <div>
+              <label style={labelStyle}>PRIMARY COLOR</label>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+                {["#6366F1","#8B5CF6","#EC4899","#EF4444","#F59E0B","#10B981","#06B6D4","#3B82F6","#F97316","#64748B"].map(col => (
+                  <div key={col} onClick={() => setPlatformForm((p: any) => ({ ...p, primary_color: col }))} style={{ width: 22, height: 22, borderRadius: 6, background: col, cursor: "pointer", border: platformForm.primary_color === col ? "2.5px solid var(--text)" : "2px solid transparent", transition: "transform 0.1s", transform: platformForm.primary_color === col ? "scale(1.15)" : "scale(1)" }} />
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <input type="color" value={platformForm.primary_color || "#6366F1"} onChange={e => setPlatformForm((p: any) => ({ ...p, primary_color: e.target.value }))} style={{ width: 34, height: 30, border: "none", borderRadius: 6, cursor: "pointer", padding: 0, background: "none" }} />
+                <input style={{ ...inputStyle, flex: 1 }} value={platformForm.primary_color || ""} onChange={e => setPlatformForm((p: any) => ({ ...p, primary_color: e.target.value }))} placeholder="#6366F1" />
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div>
+              <label style={labelStyle}>LOGO</label>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input style={{ ...inputStyle, flex: 1 }} value={platformForm.logo?.startsWith("data:") ? "(uploaded)" : platformForm.logo || ""} onChange={e => setPlatformForm((p: any) => ({ ...p, logo: e.target.value }))} placeholder="https://... or upload" />
+                <label style={{ padding: "0 10px", height: 34, display: "flex", alignItems: "center", background: "var(--surface2)", border: "1px solid var(--border-color)", borderRadius: 8, cursor: "pointer", fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap" }}>
+                  Upload
+                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = ev => setPlatformForm((p: any) => ({ ...p, logo: ev.target?.result as string })); r.readAsDataURL(f); }} />
+                </label>
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>FAVICON</label>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input style={{ ...inputStyle, flex: 1 }} value={platformForm.favicon?.startsWith("data:") ? "(uploaded)" : platformForm.favicon || ""} onChange={e => setPlatformForm((p: any) => ({ ...p, favicon: e.target.value }))} placeholder="https://... or upload" />
+                <label style={{ padding: "0 10px", height: 34, display: "flex", alignItems: "center", background: "var(--surface2)", border: "1px solid var(--border-color)", borderRadius: 8, cursor: "pointer", fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap" }}>
+                  Upload
+                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = ev => setPlatformForm((p: any) => ({ ...p, favicon: ev.target?.result as string })); r.readAsDataURL(f); }} />
+                </label>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flex: 1, padding: "10px 14px", background: "var(--surface2)", borderRadius: 8 }}>
               <div><div style={{ fontSize: 13, fontWeight: 600 }}>Allow Registration</div><div style={{ fontSize: 11, color: "var(--muted)" }}>Public sign-up</div></div>
               <Toggle value={!!platformForm.allow_registration} onChange={v => setPlatformForm((p: any) => ({ ...p, allow_registration: v }))} />
@@ -257,9 +299,10 @@ export default function AdminPage() {
             <div><div style={{ fontSize: 13, fontWeight: 600 }}>SSL/TLS (Port 465)</div><div style={{ fontSize: 11, color: "var(--muted)" }}>Use STARTTLS for port 587</div></div>
             <Toggle value={!!mailForm.mail_secure} onChange={v => setMailForm((p: any) => ({ ...p, mail_secure: v }))} />
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn-primary" onClick={saveMailSettings} disabled={saving}>{saving ? "Saving..." : "Save"}</button>
-            <button className="btn-ghost" onClick={testMail} disabled={mailTest.status === "loading"}>🧪 {mailTest.status === "loading" ? "Testing..." : "Test Email"}</button>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button className="btn-primary" onClick={saveMailSettings} disabled={saving} style={{ minWidth: 100 }}>{saving ? "Saving..." : "💾 Save Settings"}</button>
+            <button className="btn-ghost" onClick={testMail} disabled={mailTest.status === "loading"} style={{ minWidth: 120 }}>🧪 {mailTest.status === "loading" ? "Sending test..." : "Send Test Email"}</button>
+            <span style={{ fontSize: 11, color: "var(--muted)" }}>Test email also saves first</span>
           </div>
           {mailTest.status !== "idle" && (
             <div style={{ padding: "10px 12px", borderRadius: 8, background: mailTest.status === "ok" ? "rgba(16,185,129,0.1)" : mailTest.status === "error" ? "rgba(239,68,68,0.08)" : "var(--surface2)", border: `1px solid ${mailTest.status === "ok" ? "rgba(16,185,129,0.3)" : mailTest.status === "error" ? "rgba(239,68,68,0.2)" : "transparent"}`, fontSize: 13, color: mailTest.status === "ok" ? "#10B981" : mailTest.status === "error" ? "#EF4444" : "var(--muted)" }}>
@@ -371,10 +414,16 @@ export default function AdminPage() {
             <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>Assign Plan</div>
             <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 18 }}>{showAssignModal.name || showAssignModal.email}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {showAssignModal.plan_name && (
+                <div style={{ padding: "8px 12px", background: "rgba(16,185,129,0.08)", borderRadius: 8, border: "1px solid rgba(16,185,129,0.2)", fontSize: 12, color: "#10B981" }}>
+                  Current plan: <strong>{showAssignModal.plan_name}</strong>
+                  {showAssignModal.plan_expires_at && ` · expires ${new Date(showAssignModal.plan_expires_at).toLocaleDateString()}`}
+                </div>
+              )}
               <div>
-                <label style={labelStyle}>PLAN</label>
+                <label style={labelStyle}>ASSIGN PLAN</label>
                 <select className="select" defaultValue={showAssignModal.plan_id || ""} id="assign-plan-select" style={{ width: "100%", height: 36 }}>
-                  <option value="">No plan (full access)</option>
+                  <option value="">🚫 No plan (remove restriction)</option>
                   {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>

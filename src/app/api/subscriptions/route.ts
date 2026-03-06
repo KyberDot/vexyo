@@ -5,7 +5,7 @@ import { getDb } from "@/lib/db";
 import { z } from "zod";
 
 const schema = z.object({
-  name: z.string().min(1),
+  name: z.string().min(1).max(100),
   amount: z.number().nonnegative().optional().default(0),
   currency: z.string().default("USD"),
   cycle: z.enum(["monthly", "yearly", "weekly", "quarterly", "6-months", "variable"]),

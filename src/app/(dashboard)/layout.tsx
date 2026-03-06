@@ -11,19 +11,19 @@ export const useSearch = () => useContext(SearchContext);
 
 const NAV = [
   { section: "Main", items: [
-    { label: "Dashboard", href: "/dashboard", icon: "🏠" },
-    { label: "AI Agent", href: "/dashboard/ai", icon: "🤖" },
+    { label: t("dashboard"), href: "/dashboard", icon: "🏠" },
+    { label: t("aiAgent"), href: "/dashboard/ai", icon: "🤖" },
   ]},
   { section: "Subscriptions", items: [
-    { label: "Subscriptions", href: "/dashboard/subscriptions", icon: "📋" },
-    { label: "Bills", href: "/dashboard/bills", icon: "🧾" },
-    { label: "Debts", href: "/dashboard/debts", icon: "💸" },
-    { label: "Analytics", href: "/dashboard/analytics", icon: "📊" },
-    { label: "Categories", href: "/dashboard/categories", icon: "🏷️" },
-    { label: "Family", href: "/dashboard/family", icon: "👨‍👩‍👧" },
-    { label: "Wallet", href: "/dashboard/payments", icon: "👛" },
-    { label: "Notifications", href: "/dashboard/notifications", icon: "🔔" },
-    { label: "Shared Links", href: "/dashboard/shares", icon: "🔗" },
+    { label: t("subscriptions"), href: "/dashboard/subscriptions", icon: "📋" },
+    { label: t("bills"), href: "/dashboard/bills", icon: "🧾" },
+    { label: t("debts"), href: "/dashboard/debts", icon: "💸" },
+    { label: t("analytics"), href: "/dashboard/analytics", icon: "📊" },
+    { label: t("categories"), href: "/dashboard/categories", icon: "🏷️" },
+    { label: t("family"), href: "/dashboard/family", icon: "👨‍👩‍👧" },
+    { label: t("wallet"), href: "/dashboard/payments", icon: "👛" },
+    { label: t("notifications"), href: "/dashboard/notifications", icon: "🔔" },
+    { label: t("sharedLinks"), href: "/dashboard/shares", icon: "🔗" },
   ]},
 ];
 
@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const { platform, userAvatar, userName, userRole, reloadProfile } = useSettings();
+  const { platform, userAvatar, userName, userRole, reloadProfile, t } = useSettings();
   const [notifCount, setNotifCount] = useState(0);
   const [search, setSearch] = useState("");
   const [collapsed, setCollapsed] = useState(false);

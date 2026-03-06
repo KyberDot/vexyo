@@ -76,7 +76,7 @@ export default function AnalyticsPage() {
               <BarChart data={catData} layout="vertical" margin={{ left: 0, right: 10 }}>
                 <XAxis type="number" tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} tickFormatter={v => `${currencySymbol}${v}`} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} width={90} />
-                <Tooltip formatter={(v: any) => [`${currencySymbol}${v}`, "Monthly"]} contentStyle={{ background: "var(--surface)", border: "1px solid var(--border-color)", borderRadius: 8, fontSize: 12 }} />
+                <Tooltip formatter={(v: any) => [`${currencySymbol}${v}`, "Monthly"]} contentStyle={{ background: "#1A1D27", border: "1px solid #2A2D3A", borderRadius: 8, fontSize: 12, color: "#F1F5F9" }} labelStyle={{ color: "#94A3B8" }} itemStyle={{ color: "#F1F5F9" }} />
                 <Bar dataKey="spend" radius={4}>
                   {catData.map((c, i) => <Cell key={i} fill={c.color} />)}
                 </Bar>
@@ -95,7 +95,7 @@ export default function AnalyticsPage() {
                   <Pie data={catData} dataKey="spend" cx="50%" cy="50%" innerRadius={40} outerRadius={70}>
                     {catData.map((c, i) => <Cell key={i} fill={c.color} />)}
                   </Pie>
-                  <Tooltip formatter={(v: any) => [`${currencySymbol}${Number(v).toFixed(2)}`, ""]} contentStyle={{ background: "var(--surface)", border: "1px solid var(--border-color)", borderRadius: 8, fontSize: 11 }} />
+                  <Tooltip formatter={(v: any) => [`${currencySymbol}${Number(v).toFixed(2)}`, ""]} contentStyle={{ background: "#1A1D27", border: "1px solid #2A2D3A", borderRadius: 8, fontSize: 11, color: "#F1F5F9" }} labelStyle={{ color: "#94A3B8" }} itemStyle={{ color: "#F1F5F9" }} />
                 </PieChart>
               </ResponsiveContainer>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
@@ -119,7 +119,7 @@ export default function AnalyticsPage() {
           <LineChart data={trendData}>
             <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} tickFormatter={v => `${currencySymbol}${v}`} />
-            <Tooltip formatter={(v: any, n: string) => [`${currencySymbol}${v}`, n]} contentStyle={{ background: "var(--surface)", border: "1px solid var(--border-color)", borderRadius: 8, fontSize: 12 }} />
+            <Tooltip formatter={(v: any, n: string) => [`${currencySymbol}${v}`, n]} contentStyle={{ background: "#1A1D27", border: "1px solid #2A2D3A", borderRadius: 8, fontSize: 12, color: "#F1F5F9" }} labelStyle={{ color: "#94A3B8" }} itemStyle={{ color: "#F1F5F9" }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Line type="monotone" dataKey="subscriptions" stroke="var(--accent)" strokeWidth={2.5} dot={false} />
             <Line type="monotone" dataKey="bills" stroke="#F59E0B" strokeWidth={2.5} dot={false} />

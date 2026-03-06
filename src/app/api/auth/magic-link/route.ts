@@ -3,10 +3,12 @@ import { getDb } from "@/lib/db";
 import { getMailTransporter } from "@/lib/mailer";
 import { emailTemplate } from "@/lib/emailTemplate";
 import crypto from "crypto";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
   const { email } = await req.json().catch(() => ({}));
   if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
+  if (!checkRateLimit(`magic:${email}`, 3, 10 * 60 * 1000)) return NextResponse.json({ error: "Too many requests. Please wait before trying again." }, { status: 429 });
   const db = getDb();
   const platform = db.prepare("SELECT * FROM platform_settings WHERE id = 1").get() as any;
   if (!platform?.magic_link_enabled) return NextResponse.json({ error: "Magic link login is not enabled" }, { status: 403 });
