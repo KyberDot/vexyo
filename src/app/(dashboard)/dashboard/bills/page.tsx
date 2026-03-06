@@ -143,7 +143,7 @@ export default function BillsPage() {
         })}
       </div>
       {payHistorySub && <PaymentHistory sub={payHistorySub} onClose={() => setPayHistorySub(null)} />}
-      {showModal && <SubModal sub={editBill} defaultType="bill" familyMembers={familyMembers} paymentMethods={paymentMethods} onSave={async (data) => { try { editBill ? await update(editBill.id, data) : await add(data); success(editBill ? "Bill updated" : "Bill added"); setShowModal(false); setEditBill(null); } catch { toastError("Failed to save bill"); } }} onClose={() => { setShowModal(false); setEditBill(null); }} />}
+      {showModal && <SubModal sub={editBill} defaultType="bill" familyMembers={familyMembers} paymentMethods={paymentMethods} onSave={async (data: any) => { try { editBill ? await update(editBill.id, data) : await add(data); success(editBill ? "Bill updated" : "Bill added"); setShowModal(false); setEditBill(null); } catch { toastError("Failed to save bill"); } }} onClose={() => { setShowModal(false); setEditBill(null); }} />}
     </div>
   );
 }

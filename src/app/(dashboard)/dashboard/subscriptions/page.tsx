@@ -149,7 +149,7 @@ export default function SubscriptionsPage() {
         })}
       </div>
       {payHistorySub && <PaymentHistory sub={payHistorySub} onClose={() => setPayHistorySub(null)} />}
-      {showModal && <SubModal sub={editSub} defaultType="subscription" familyMembers={familyMembers} paymentMethods={paymentMethods} onSave={async (data) => { try { editSub ? await update(editSub.id, data) : await add(data); success(editSub ? "Subscription updated" : "Subscription added"); setShowModal(false); setEditSub(null); } catch { toastError("Failed to save subscription"); } }} onClose={() => { setShowModal(false); setEditSub(null); }} />}
+      {showModal && <SubModal sub={editSub} defaultType="subscription" familyMembers={familyMembers} paymentMethods={paymentMethods} onSave={async (data: any) => { try { editSub ? await update(editSub.id, data) : await add(data); success(editSub ? "Subscription updated" : "Subscription added"); setShowModal(false); setEditSub(null); } catch { toastError("Failed to save subscription"); } }} onClose={() => { setShowModal(false); setEditSub(null); }} />}
     </div>
   );
 }

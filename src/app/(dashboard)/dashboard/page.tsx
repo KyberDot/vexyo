@@ -250,7 +250,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {showModal && <SubModal onSave={async (data) => { await add(data); setShowModal(false); }} onClose={() => setShowModal(false)} />}
+      {showModal && <SubModal onSave={async (data: any) => { await add(data); setShowModal(false); }} onClose={() => setShowModal(false)} />}
     </div>
   );
 }
