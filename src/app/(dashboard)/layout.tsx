@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, createContext, useContext } from "react";
+import { useState, useEffect, useRef, createContext, useContext, useMemo } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -9,29 +9,29 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 export const SearchContext = createContext<{ search: string }>({ search: "" });
 export const useSearch = () => useContext(SearchContext);
 
-const NAV = [
-  { section: "Main", items: [
-    { label: t("dashboard"), href: "/dashboard", icon: "🏠" },
-    { label: t("aiAgent"), href: "/dashboard/ai", icon: "🤖" },
-  ]},
-  { section: "Subscriptions", items: [
-    { label: t("subscriptions"), href: "/dashboard/subscriptions", icon: "📋" },
-    { label: t("bills"), href: "/dashboard/bills", icon: "🧾" },
-    { label: t("debts"), href: "/dashboard/debts", icon: "💸" },
-    { label: t("analytics"), href: "/dashboard/analytics", icon: "📊" },
-    { label: t("categories"), href: "/dashboard/categories", icon: "🏷️" },
-    { label: t("family"), href: "/dashboard/family", icon: "👨‍👩‍👧" },
-    { label: t("wallet"), href: "/dashboard/payments", icon: "👛" },
-    { label: t("notifications"), href: "/dashboard/notifications", icon: "🔔" },
-    { label: t("sharedLinks"), href: "/dashboard/shares", icon: "🔗" },
-  ]},
-];
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const { platform, userAvatar, userName, userRole, reloadProfile, t } = useSettings();
+
+  const NAV = useMemo(() => [
+    { section: "Main", items: [
+      { label: t("dashboard"), href: "/dashboard", icon: "🏠" },
+      { label: t("aiAgent"), href: "/dashboard/ai", icon: "🤖" },
+    ]},
+    { section: "Subscriptions", items: [
+      { label: t("subscriptions"), href: "/dashboard/subscriptions", icon: "📋" },
+      { label: t("bills"), href: "/dashboard/bills", icon: "🧾" },
+      { label: t("debts"), href: "/dashboard/debts", icon: "💸" },
+      { label: t("analytics"), href: "/dashboard/analytics", icon: "📊" },
+      { label: t("categories"), href: "/dashboard/categories", icon: "🏷️" },
+      { label: t("family"), href: "/dashboard/family", icon: "👨‍👩‍👧" },
+      { label: t("wallet"), href: "/dashboard/payments", icon: "👛" },
+      { label: t("notifications"), href: "/dashboard/notifications", icon: "🔔" },
+      { label: t("sharedLinks"), href: "/dashboard/shares", icon: "🔗" },
+    ]},
+  ], [t]);
   const [notifCount, setNotifCount] = useState(0);
   const [search, setSearch] = useState("");
   const [collapsed, setCollapsed] = useState(false);
