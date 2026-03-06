@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
   const [debts, setDebts] = useState<any[]>([]);
+  
   useEffect(() => {
     fetch("/api/debts").then(r => r.json()).then(d => { if (Array.isArray(d)) setDebts(d); }).catch(() => {});
   }, []);
@@ -123,10 +124,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Budget + Upcoming side by side */}
+      {/* Budget + Upcoming Side by Side with fixed heights */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
-        {/* Budget tracker */}
-        <div className="card">
+        {/* Budget Tracker */}
+        <div className="card" style={{ height: "420px", display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", gap: 6 }}>Monthly Budget <span style={{ fontSize: 14 }}>ℹ️</span></div>
@@ -162,7 +163,7 @@ export default function DashboardPage() {
               </div>
             </div>
           ) : (
-            <div style={{ marginTop: 20, textAlign: "center", padding: "24px 0" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>🎯</div>
               <div style={{ fontSize: 14, color: "var(--muted)", marginBottom: 12 }}>Set a monthly budget to track your spending</div>
               <Link href="/dashboard/settings" className="btn-primary" style={{ fontSize: 13, background: accentColor }}>Set Budget →</Link>
@@ -170,7 +171,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Upcoming renewals - FIXED VERSION */}
+        {/* Upcoming Renewals with Internal Scroll */}
         <div className="card" style={{ height: "420px", display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
@@ -179,8 +180,7 @@ export default function DashboardPage() {
             </div>
             <Link href="/dashboard/subscriptions" style={{ fontSize: 13, color: accentColor, textDecoration: "none", fontWeight: 600 }}>View All →</Link>
           </div>
-          
-          {/* Scroll wrapper starts here */}
+
           <div style={{ overflowY: "auto", flex: 1, paddingRight: 4 }}>
             {upcomingRenewals.length === 0 ? (
               <div style={{ textAlign: "center", padding: "24px 0", color: "var(--muted)", fontSize: 14 }}>🎉 No renewals in the next 7 days</div>
@@ -189,7 +189,12 @@ export default function DashboardPage() {
               const dayLabel = days === 0 ? "Today" : days === 1 ? "Tomorrow" : `in ${days} days`;
               return (
                 <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border-color)" }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                  {/* FIXED ICON CONTAINER: position relative + overflow hidden prevents color bleed */}
+                  <div style={{ 
+                    width: 38, height: 38, borderRadius: 10, background: "var(--surface2)", 
+                    display: "flex", alignItems: "center", justifyContent: "center", 
+                    overflow: "hidden", flexShrink: 0, position: "relative" 
+                  }}>
                     {s.icon ? <img src={s.icon} width={28} height={28} style={{ objectFit: "contain" }} alt={s.name} onError={e => (e.currentTarget.style.display = "none")} /> : <span style={{ fontSize: 16 }}>📦</span>}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -204,7 +209,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Spend trend */}
+      {/* Spend Trend Chart */}
       <div className="card">
         <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Monthly Spend Trend</div>
         <ResponsiveContainer width="100%" height={160}>
@@ -217,7 +222,7 @@ export default function DashboardPage() {
         </ResponsiveContainer>
       </div>
 
-      {/* Debts summary */}
+      {/* Debts Summary */}
       {debts.filter(d => d.active && (d.amount - d.paid) > 0).length > 0 && (
         <div className="card">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>

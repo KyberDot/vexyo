@@ -24,7 +24,8 @@ function displayAmount(s: Subscription, convertToDisplay: (a: number, c: string)
 export default function SubscriptionsPage() {
   const { subs, loading, add, update, remove } = useSubscriptions();
   const { settings, currencySymbol, convertToDisplay, platform } = useSettings();
-  const { query } = useSearch();
+  // FIXED: Changed { query } to { search } to match the hook's return type
+  const { search } = useSearch();
   const { success } = useToast();
 
   const [showModal, setShowModal] = useState(false);
@@ -41,12 +42,13 @@ export default function SubscriptionsPage() {
 
   const filtered = useMemo(() => {
     let list = subs.filter(s => s.type === "subscription");
-    if (query) {
-      const q = query.toLowerCase();
+    // FIXED: Using 'search' here instead of 'query'
+    if (search) {
+      const q = search.toLowerCase();
       list = list.filter(s => s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q));
     }
     return list.sort((a, b) => a.name.localeCompare(b.name));
-  }, [subs, query]);
+  }, [subs, search]);
 
   if (loading) return <div style={{ color: "var(--muted)", padding: 24 }}>Loading...</div>;
 
@@ -68,7 +70,6 @@ export default function SubscriptionsPage() {
 
           return (
             <div key={s.id} className="card" style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", opacity: s.active ? 1 : 0.6, position: "relative" }}>
-              {/* Icon Container with strict isolation */}
               <div style={{ 
                 width: 44, 
                 height: 44, 
@@ -77,8 +78,8 @@ export default function SubscriptionsPage() {
                 display: "flex", 
                 alignItems: "center", 
                 justifyContent: "center", 
-                overflow: "hidden", // Prevents outside elements from bleeding in
-                flexShrink: 0,
+                overflow: "hidden", 
+                flexShrink: 0, 
                 position: "relative",
                 zIndex: 1
               }}>
@@ -92,16 +93,15 @@ export default function SubscriptionsPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontWeight: 600, fontSize: 15 }}>{s.name}</span>
-                  {/* Fixed Trial Badge: Increased margin and specific styling to avoid overlap */}
                   {s.trial && (
                     <span style={{ 
-                      background: "rgba(239, 68, 68, 0.15)", // Slightly transparent bg looks cleaner
+                      background: "rgba(239, 68, 68, 0.15)", 
                       color: "#EF4444", 
                       fontSize: 10, 
                       padding: "2px 8px", 
                       borderRadius: 6, 
                       fontWeight: 800,
-                      marginLeft: 10, // More breathing room
+                      marginLeft: 10,
                       display: "inline-block",
                       lineHeight: "1.2",
                       border: "1px solid rgba(239, 68, 68, 0.2)"
