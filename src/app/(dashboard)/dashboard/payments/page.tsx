@@ -30,10 +30,13 @@ export default function PaymentsPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editMethod, setEditMethod] = useState<any>(null);
-  const [form, setForm] = useState<any>({ label: "", account_type: "bank", last4: "", icon: "", currency: settings.currency, balance: "", member_id: null, is_default: false });
+  const [form, setForm] = useState<any>({ label: "", account_type: "bank", last4: "", icon: "", currency: settings?.currency || "USD", balance: "", member_id: null, is_default: false });
   const [saving, setSaving] = useState(false);
   const [iconMode, setIconMode] = useState<"auto" | "upload" | "url">("auto");
-  const [balanceAction, setBalanceAction] = useState<"add" | "remove" | null>(null);
+  
+  // FIX 1: Track the specific ID of the wallet being edited
+  const [balanceAction, setBalanceAction] = useState<{ id: number; type: "add" | "remove" } | null>(null);
+  
   const [balanceDelta, setBalanceDelta] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -50,8 +53,11 @@ export default function PaymentsPage() {
     setSaving(true);
     const at = ACCOUNT_TYPES.find(a => a.value === form.account_type);
     const autoIcon = at?.icon || "💰";
+    
     const body = {
       ...form,
+      // FIX 2: Force it to use the user's settings currency if form currency is blank
+      currency: form.currency || settings.currency || "USD",
       icon: iconMode === "auto" ? autoIcon : (form.icon || autoIcon),
       balance: Number(form.balance) || 0,
       is_default: !!form.is_default,
@@ -75,7 +81,7 @@ export default function PaymentsPage() {
   const updateBalance = async (method: any) => {
     const delta = Number(balanceDelta);
     if (!delta || !balanceAction) return;
-    const newBalance = balanceAction === "add" ? (method.balance || 0) + delta : Math.max(0, (method.balance || 0) - delta);
+    const newBalance = balanceAction.type === "add" ? (method.balance || 0) + delta : Math.max(0, (method.balance || 0) - delta);
     await fetch(`/api/payment-methods/${method.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ balance: newBalance }) });
     setBalanceDelta("");
     setBalanceAction(null);
@@ -95,7 +101,7 @@ export default function PaymentsPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }} className="fade-in">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div><h1 style={{ fontSize: 22, fontWeight: 700 }}>Wallet</h1><p style={{ color: "var(--muted)", fontSize: 13, marginTop: 2 }}>Manage your payment methods and account balances</p></div>
-        <button className="btn-primary" onClick={() => { setEditMethod(null); setForm({ label: "", account_type: "bank", last4: "", icon: "", currency: settings.currency, balance: "", member_id: null, is_default: false }); setIconMode("auto"); setShowModal(true); }}>+ Add Account</button>
+        <button className="btn-primary" onClick={() => { setEditMethod(null); setForm({ label: "", account_type: "bank", last4: "", icon: "", currency: settings.currency || "USD", balance: "", member_id: null, is_default: false }); setIconMode("auto"); setShowModal(true); }}>+ Add Account</button>
       </div>
 
       {methods.length === 0 ? (
@@ -112,7 +118,12 @@ export default function PaymentsPage() {
             const sym = CURRENCY_SYMBOLS[m.currency] || m.currency || currencySymbol;
             const at = ACCOUNT_TYPES.find(a => a.value === m.account_type) || ACCOUNT_TYPES[ACCOUNT_TYPES.length - 1];
             const displayIcon = m.icon && (m.icon.startsWith("data:") || m.icon.startsWith("http")) ? null : (m.icon && m.icon.length <= 4 ? m.icon : at.icon);
-            const isEditingBalance = balanceAction !== null;
+            
+            // Checking if THIS specific wallet is being edited
+            const isEditingThis = balanceAction?.id === m.id;
+            const isAdding = isEditingThis && balanceAction?.type === "add";
+            const isRemoving = isEditingThis && balanceAction?.type === "remove";
+
             return (
               <div key={m.id} className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
@@ -136,10 +147,10 @@ export default function PaymentsPage() {
                   <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>Balance</div>
                   <div style={{ fontSize: 22, fontWeight: 800 }}>{sym}{fmt(m.balance || 0)}</div>
                   <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                    <button onClick={() => { setBalanceAction(p => p === "add" ? null : "add"); setBalanceDelta(""); }} style={{ flex: 1, padding: "5px", borderRadius: 6, border: `1px solid ${balanceAction === "add" && m === methods.find(x => x.id === m.id) ? "var(--accent)" : "var(--border-color)"}`, background: "transparent", color: "#10B981", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>+ Add</button>
-                    <button onClick={() => { setBalanceAction(p => p === "remove" ? null : "remove"); setBalanceDelta(""); }} style={{ flex: 1, padding: "5px", borderRadius: 6, border: "1px solid var(--border-color)", background: "transparent", color: "#EF4444", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>− Remove</button>
+                    <button onClick={() => { setBalanceAction(p => p?.id === m.id && p.type === "add" ? null : { id: m.id, type: "add" }); setBalanceDelta(""); }} style={{ flex: 1, padding: "5px", borderRadius: 6, border: `1px solid ${isAdding ? "var(--accent)" : "var(--border-color)"}`, background: isAdding ? "rgba(var(--accent-rgb), 0.1)" : "transparent", color: "#10B981", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>+ Add</button>
+                    <button onClick={() => { setBalanceAction(p => p?.id === m.id && p.type === "remove" ? null : { id: m.id, type: "remove" }); setBalanceDelta(""); }} style={{ flex: 1, padding: "5px", borderRadius: 6, border: `1px solid ${isRemoving ? "rgba(239,68,68,0.5)" : "var(--border-color)"}`, background: isRemoving ? "rgba(239,68,68,0.1)" : "transparent", color: "#EF4444", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>− Remove</button>
                   </div>
-                  {balanceAction && (
+                  {isEditingThis && (
                     <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
                       <input className="input" type="number" step="0.01" min="0" placeholder="Amount" value={balanceDelta} onChange={e => setBalanceDelta(e.target.value)} style={{ flex: 1, height: 32, fontSize: 12 }} />
                       <button onClick={() => updateBalance(m)} style={{ padding: "0 10px", borderRadius: 6, border: "none", background: "var(--accent)", color: "white", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>OK</button>
@@ -186,7 +197,7 @@ export default function PaymentsPage() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div><label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 4, display: "block" }}>Currency</label>
-                  <select className="select" style={{ width: "100%" }} value={form.currency || settings.currency} onChange={e => setF("currency", e.target.value)}>
+                  <select className="select" style={{ width: "100%" }} value={form.currency || settings.currency || "USD"} onChange={e => setF("currency", e.target.value)}>
                     {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
                   </select>
                 </div>
