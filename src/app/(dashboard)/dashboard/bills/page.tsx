@@ -14,10 +14,10 @@ function displayAmount(s: Subscription, convertToDisplay: (a: number, c: string)
   const conv = convertToDisplay(s.amount, s.currency);
   
   // Consistency fix: Added "/" and capitalized labels for all cycles
-  if (s.cycle === "yearly") return { main: `${currencySymbol}${fmt(conv)}`, sub: "/ Year", isVariable: false };
-  if (s.cycle === "6-months") return { main: `${currencySymbol}${fmt(conv)}`, sub: "/ 6-Months", isVariable: false };
-  if (s.cycle === "quarterly") return { main: `${currencySymbol}${fmt(conv)}`, sub: "/ Quarter", isVariable: false };
-  if (s.cycle === "weekly") return { main: `${currencySymbol}${fmt(conv)}`, sub: "/ Week", isVariable: false };
+  if (s.cycle === "yearly") return { main: `${currencySymbol}${fmt(conv)}`, sub: "/yr", isVariable: false };
+  if (s.cycle === "6-months") return { main: `${currencySymbol}${fmt(conv)}`, sub: "/6m", isVariable: false };
+  if (s.cycle === "quarterly") return { main: `${currencySymbol}${fmt(conv)}`, sub: "/qtr", isVariable: false };
+  if (s.cycle === "weekly") return { main: `${currencySymbol}${fmt(conv)}`, sub: "/wk", isVariable: false };
   
   // Monthly default
   return { main: `${currencySymbol}${fmt(convertToDisplay(toMonthly(s.amount, s.cycle), s.currency))}`, sub: "/ Month", isVariable: false };

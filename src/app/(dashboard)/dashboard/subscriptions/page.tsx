@@ -13,10 +13,10 @@ function displayAmount(s: Subscription, convertToDisplay: (a: number, c: string)
   if (s.cycle === "variable") return { main: "Variable", sub: "", isVariable: true };
   const conv = convertToDisplay(s.amount, s.currency);
   // FIX: Added slashes to all cycles
-  if (s.cycle === "yearly") return { main: `${currencySymbol}${fmt(conv)}`, sub: " /yr", isVariable: false };
-  if (s.cycle === "6-months") return { main: `${currencySymbol}${fmt(conv)}`, sub: " /6m", isVariable: false };
-  if (s.cycle === "quarterly") return { main: `${currencySymbol}${fmt(conv)}`, sub: " /qtr", isVariable: false };
-  if (s.cycle === "weekly") return { main: `${currencySymbol}${fmt(conv)}`, sub: " /wk", isVariable: false };
+  if (s.cycle === "yearly") return { main: `${currencySymbol}${fmt(conv)}`, sub: "/yr", isVariable: false };
+  if (s.cycle === "6-months") return { main: `${currencySymbol}${fmt(conv)}`, sub: "/6m", isVariable: false };
+  if (s.cycle === "quarterly") return { main: `${currencySymbol}${fmt(conv)}`, sub: "/qtr", isVariable: false };
+  if (s.cycle === "weekly") return { main: `${currencySymbol}${fmt(conv)}`, sub: "/wk", isVariable: false };
   return { main: `${currencySymbol}${fmt(convertToDisplay(toMonthly(s.amount, s.cycle), s.currency))}`, sub: "/mo", isVariable: false };
 }
 
