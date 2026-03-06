@@ -16,7 +16,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const existing = db.prepare("SELECT * FROM subscriptions WHERE id = ? AND user_id = ?").get(params.id, userId);
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const body = await req.json();
-  const fields = ["name", "amount", "currency", "cycle", "category", "icon", "color", "next_date", "member_id", "notes", "trial", "active", "payment_method_id"];
+  const fields = ["name", "amount", "currency", "cycle", "category", "icon", "color", "next_date", "member_id", "notes", "trial", "active", "payment_method_id", "type", "remind_1d", "remind_3d", "remind_7d", "remind_14d"];
   const updates: string[] = [];
   const values: any[] = [];
   for (const f of fields) {

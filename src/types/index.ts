@@ -34,18 +34,11 @@ export interface UserSettings {
 }
 
 export interface PlatformSettings {
-  app_name: string;
-  logo?: string;
-  favicon?: string;
-  primary_color: string;
-  allow_registration: boolean;
-  magic_link_enabled?: boolean;
-  mail_host?: string;
-  mail_port?: number;
-  mail_user?: string;
-  mail_pass?: string;
-  mail_from?: string;
-  mail_secure?: boolean;
+  app_name: string; logo?: string; favicon?: string;
+  primary_color: string; allow_registration: boolean; magic_link_enabled?: boolean;
+  mail_host?: string; mail_port?: number; mail_user?: string;
+  mail_pass?: string; mail_from?: string; mail_secure?: boolean;
+  app_url?: string;
 }
 
 export const DEFAULT_CATEGORIES: UserCategory[] = [

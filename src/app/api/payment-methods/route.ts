@@ -19,10 +19,10 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const userId = await getUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { label, type, last4, brand, is_default } = await req.json();
+  const { label, type, last4, brand, icon, account_type, currency, balance, is_default } = await req.json();
   if (!label) return NextResponse.json({ error: "Label required" }, { status: 400 });
   const db = getDb();
   if (is_default) db.prepare("UPDATE payment_methods SET is_default = 0 WHERE user_id = ?").run(userId);
-  const r = db.prepare("INSERT INTO payment_methods (user_id, label, type, last4, brand, is_default) VALUES (?, ?, ?, ?, ?, ?)").run(userId, label, type || "card", last4 || null, brand || null, is_default ? 1 : 0);
+  const r = db.prepare("INSERT INTO payment_methods (user_id, label, type, last4, brand, icon, account_type, currency, balance, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(userId, label, type || "card", last4 || null, brand || null, icon || null, account_type || "other", currency || "USD", Number(balance) || 0, is_default ? 1 : 0);
   return NextResponse.json(db.prepare("SELECT * FROM payment_methods WHERE id = ?").get(r.lastInsertRowid), { status: 201 });
 }

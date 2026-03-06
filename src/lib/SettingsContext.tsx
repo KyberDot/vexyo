@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
-import { CURRENCY_SYMBOLS, EXCHANGE_RATES, PlatformSettings, DEFAULT_CATEGORIES, UserCategory } from "@/types";
+import { CURRENCY_SYMBOLS, EXCHANGE_RATES as STATIC_RATES, PlatformSettings, DEFAULT_CATEGORIES, UserCategory } from "@/types";
 import { type Lang, TRANSLATIONS, t as translate } from "@/lib/i18n";
 
 interface Settings {
@@ -60,6 +60,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [userAvatar, setUserAvatar] = useState<string | null>(cachedProfile.avatar);
   const [userName, setUserName] = useState<string | null>(cachedProfile.name);
   const [userRole, setUserRole] = useState<string | null>(cachedProfile.role);
+  const [exchangeRates, setExchangeRates] = useState<Record<string, number>>(STATIC_RATES);
   const lang = ((settings.language || "en") as Lang);
 
   const applyTheme = (t: string) => { document.documentElement.className = t === "light" ? "light" : "dark"; };
@@ -122,6 +123,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }).catch(() => {});
     reloadCategories();
     reloadProfile();
+    // Fetch live exchange rates
+    fetch("/api/exchange-rates").then(r => r.json()).then(rates => {
+      if (rates && typeof rates === "object") setExchangeRates(rates);
+    }).catch(() => {});
   }, []);
 
   const saveSettings = async (s: Settings) => {
@@ -141,7 +146,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const convertToDisplay = (amount: number, from: string): number => {
     if (from === settings.currency) return amount;
-    return (amount / (EXCHANGE_RATES[from] || 1)) * (EXCHANGE_RATES[settings.currency] || 1);
+    return (amount / (exchangeRates[from] || 1)) * (exchangeRates[settings.currency] || 1);
   };
 
   return (

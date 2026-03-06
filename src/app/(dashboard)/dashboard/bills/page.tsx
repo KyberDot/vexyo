@@ -9,6 +9,16 @@ import PaymentHistory from "@/components/PaymentHistory";
 import { useSearch } from "@/app/(dashboard)/layout";
 import { useToast } from "@/components/Toast";
 
+function displayAmount(s: Subscription, convertToDisplay: (a: number, c: string) => number, currencySymbol: string) {
+  if (s.cycle === "variable") return { main: "Variable", sub: "", isVariable: true };
+  const conv = convertToDisplay(s.amount, s.currency);
+  if (s.cycle === "yearly") return { main: `${currencySymbol}${fmt(conv)}`, sub: "yearly", isVariable: false };
+  if (s.cycle === "6-months") return { main: `${currencySymbol}${fmt(conv)}`, sub: "6-month", isVariable: false };
+  if (s.cycle === "quarterly") return { main: `${currencySymbol}${fmt(conv)}`, sub: "quarterly", isVariable: false };
+  if (s.cycle === "weekly") return { main: `${currencySymbol}${fmt(conv)}`, sub: "weekly", isVariable: false };
+  return { main: `${currencySymbol}${fmt(convertToDisplay(toMonthly(s.amount, s.cycle), s.currency))}`, sub: "/mo", isVariable: false };
+}
+
 export default function BillsPage() {
   const { currencySymbol, convertToDisplay, t } = useSettings();
   const { subs, loading, add, update, remove } = useSubscriptions();
@@ -50,8 +60,6 @@ export default function BillsPage() {
   const overdue = active.filter(b => b.next_date && daysUntil(b.next_date) < 0).length;
   const dueSoon = active.filter(b => b.next_date && daysUntil(b.next_date) >= 0 && daysUntil(b.next_date) <= 3).length;
 
-  if (loading && bills.length === 0) return <div style={{ color: "var(--muted)", padding: 24 }}>Loading...</div>;
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }} className="fade-in">
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
@@ -87,9 +95,8 @@ export default function BillsPage() {
       </div>
 
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-        {/* Fixed columns that won't overflow */}
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 96px", padding: "9px 16px", borderBottom: "1px solid var(--border-color)", background: "var(--surface2)" }}>
-          {[t("service"),t("category"),t("amount"),t("dueDate"),""].map(h => <div key={h} style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</div>)}
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 120px", padding: "9px 16px", borderBottom: "1px solid var(--border-color)", background: "var(--surface2)" }}>
+          {[t("service"),t("category"),t("payment"),t("amount"),t("dueDate"),""].map(h => <div key={h} style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</div>)}
         </div>
         {bills.length === 0 ? (
           <div style={{ padding: 48, textAlign: "center" }}>
@@ -98,12 +105,12 @@ export default function BillsPage() {
             {!showInactive && <button className="btn-primary" onClick={() => setShowModal(true)}>{t("addBill")}</button>}
           </div>
         ) : bills.map((b, i) => {
-          const mo = convertToDisplay(toMonthly(b.amount, b.cycle), b.currency);
+          const display = displayAmount(b, convertToDisplay, currencySymbol);
           const days = b.next_date ? daysUntil(b.next_date) : null;
           const isOverdue = days !== null && days < 0;
           const isSoon = days !== null && days >= 0 && days <= 3;
           return (
-            <div key={b.id} style={{ display: "grid", gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 96px", padding: "11px 16px", borderBottom: i < bills.length-1 ? "1px solid var(--border-color)" : "none", alignItems: "center", opacity: b.active ? 1 : 0.55 }}
+            <div key={b.id} style={{ display: "grid", gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 120px", padding: "11px 16px", borderBottom: i < bills.length-1 ? "1px solid var(--border-color)" : "none", alignItems: "center", opacity: b.active ? 1 : 0.55 }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--surface2)"}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
@@ -116,9 +123,13 @@ export default function BillsPage() {
                 </div>
               </div>
               <div style={{ fontSize: 12, color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.category}</div>
+              <div style={{ fontSize: 12, color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.payment_method_label || "—"}</div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 13 }}>{b.cycle === "variable" ? <span style={{ color: "var(--muted)", fontWeight: 400 }}>Variable</span> : <>{currencySymbol}{fmt(mo)}<span style={{ fontWeight: 400, color: "var(--muted)", fontSize: 10 }}>/mo</span></>}</div>
-                {b.cycle !== "monthly" && b.cycle !== "variable" && <div style={{ fontSize: 10, color: "var(--muted)" }}>{b.cycle}</div>}
+                {display.isVariable ? (
+                  <div style={{ fontWeight: 400, fontSize: 13, color: "var(--muted)", fontStyle: "italic" }}>Variable</div>
+                ) : (
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{display.main}<span style={{ fontWeight: 400, color: "var(--muted)", fontSize: 10 }}>{display.sub}</span></div>
+                )}
               </div>
               <div style={{ fontSize: 12 }}>
                 {b.next_date ? <>
@@ -128,22 +139,22 @@ export default function BillsPage() {
                   <div style={{ color: "var(--muted)", fontSize: 10 }}>{b.next_date}</div>
                 </> : <span style={{ opacity: 0.4 }}>—</span>}
               </div>
-              {/* Actions - fixed width, no overflow */}
-              <div style={{ display: "flex", alignItems: "center", gap: 2, justifyContent: "flex-end" }}>
+              {/* Actions - aligned with subscriptions page */}
+              <div style={{ display: "flex", alignItems: "center", gap: 3, justifyContent: "flex-end", flexShrink: 0 }}>
                 <div onClick={async () => { await update(b.id, { active: !b.active }); success(b.active ? "Deactivated" : "Activated"); }} title={b.active ? "Deactivate" : "Activate"} style={{ width: 30, height: 17, borderRadius: 9, background: b.active ? "var(--accent)" : "var(--border-color)", cursor: "pointer", position: "relative", flexShrink: 0 }}>
                   <div style={{ position: "absolute", top: 2, left: b.active ? 15 : 2, width: 13, height: 13, borderRadius: 7, background: "white", transition: "left 0.18s" }} />
                 </div>
-<button onClick={() => setPayHistorySub(b)} title="Payment history" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 13, padding: "2px 2px", lineHeight: 1 }}>💰</button>
+                <button onClick={() => setPayHistorySub(b)} title="Payment history" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 13, padding: "2px 2px", lineHeight: 1, flexShrink: 0 }}>💰</button>
                 <AttachmentsPanel subId={b.id} label="" />
-                <button style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 13, padding: "2px 2px" }} onClick={() => { setEditBill(b); setShowModal(true); }}>✏️</button>
-                <button style={{ background: "none", border: "none", color: "#EF4444", cursor: "pointer", fontSize: 13, padding: "2px 2px" }} onClick={async () => { if (confirm(`Delete ${b.name}?`)) { await remove(b.id); success("Bill deleted"); } }}>🗑️</button>
+                <button title="Edit" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 13, padding: "2px 2px", flexShrink: 0 }} onClick={() => { setEditBill(b); setShowModal(true); }}>✏️</button>
+                <button title="Delete" style={{ background: "none", border: "none", color: "#EF4444", cursor: "pointer", fontSize: 13, padding: "2px 2px", flexShrink: 0 }} onClick={async () => { if (confirm(`Delete ${b.name}?`)) { await remove(b.id); success("Bill deleted"); } }}>🗑️</button>
               </div>
             </div>
           );
         })}
       </div>
       {payHistorySub && <PaymentHistory sub={payHistorySub} onClose={() => setPayHistorySub(null)} />}
-      {showModal && <SubModal sub={editBill} defaultType="bill" familyMembers={familyMembers} paymentMethods={paymentMethods} onSave={async (data: any) => { try { editBill ? await update(editBill.id, data) : await add(data); success(editBill ? "Bill updated" : "Bill added"); setShowModal(false); setEditBill(null); } catch { toastError("Failed to save bill"); } }} onClose={() => { setShowModal(false); setEditBill(null); }} />}
+      {showModal && <SubModal sub={editBill} defaultType="bill" familyMembers={familyMembers} paymentMethods={paymentMethods} onSave={async (data: any) => { try { if (editBill) { await update(editBill.id, data); } else { await add(data); } success(editBill ? "Bill updated" : "Bill added"); setShowModal(false); setEditBill(null); } catch { toastError("Failed to save bill"); } }} onClose={() => { setShowModal(false); setEditBill(null); }} />}
     </div>
   );
 }

@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (body.is_default) db.prepare("UPDATE payment_methods SET is_default = 0 WHERE user_id = ?").run(userId);
   const updates: string[] = [];
   const values: any[] = [];
-  for (const f of ["label", "type", "last4", "brand", "is_default"]) {
+  for (const f of ["label", "type", "last4", "brand", "icon", "account_type", "currency", "balance", "is_default"]) {
     if (f in body) { updates.push(`${f} = ?`); values.push(typeof body[f] === "boolean" ? (body[f] ? 1 : 0) : body[f]); }
   }
   if (!updates.length) return NextResponse.json({ error: "No fields" }, { status: 400 });

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, memo } from "react";
 import { Subscription, CYCLES, CURRENCIES } from "@/types";
 import { useSettings } from "@/lib/SettingsContext";
 
-const today = new Date().toISOString().split("T")[0];
+function getToday() { return new Date().toISOString().split("T")[0]; }
 
 const POPULAR = [
   { name: "Netflix", emoji: "🎬", icon: "", category: "Entertainment" },
@@ -34,19 +34,28 @@ const STEPS = ["Service", "Pricing", "Schedule", "Details", "Reminders"];
 interface Props {
   sub?: Subscription | null;
   defaultType?: "subscription" | "bill";
-  onSave: (data: Partial<Subscription>) => void;
+  onSave: (data: any) => void;
   onClose: () => void;
   familyMembers?: any[];
   paymentMethods?: any[];
 }
+
 const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onSave, onClose, familyMembers = [], paymentMethods = [] }: Props) {
-  const { settings, categories, t } = useSettings();
+  const { settings, categories } = useSettings();
   const isEditing = !!sub;
 
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [quickSearch, setQuickSearch] = useState("");
-  const [iconMode, setIconMode] = useState<"upload" | "website" | "url">("website");
+  // Determine initial icon mode from sub data
+  const initIconMode = (): "upload" | "website" | "url" => {
+    if (!sub?.icon) return "website";
+    if (sub.icon.startsWith("data:")) return "upload";
+    // If icon looks like a URL typed by user (not auto-fetched clearbit/google), use url mode
+    if (sub.icon.startsWith("http") && !sub.icon.includes("clearbit.com") && !sub.icon.includes("google.com/s2")) return "url";
+    return "website";
+  };
+  const [iconMode, setIconMode] = useState<"upload" | "website" | "url">(initIconMode);
   const [iconLoading, setIconLoading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -55,24 +64,27 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
   const [form, setForm] = useState<any>(() => ({
     type: sub?.type || defaultType,
     name: sub?.name || "",
-    amount: sub?.amount ? String(sub.amount) : "",
+    amount: sub?.amount && sub.cycle !== "variable" ? String(sub.amount) : "",
     currency: sub?.currency || settings.currency,
     cycle: sub?.cycle || "monthly",
     category: sub?.category || (defaultType === "bill" ? "Utilities" : "Entertainment"),
     icon: sub?.icon || "",
     website: "",
-    next_date: sub?.next_date || today,
+    next_date: sub?.next_date || getToday(),
     member_id: sub?.member_id || null,
     notes: sub?.notes || "",
     trial: sub ? !!sub.trial : false,
     active: sub ? (sub.active !== false) : true,
     payment_method_id: sub?.payment_method_id || null,
+    remind_1d: sub ? !!(sub as any).remind_1d : false,
+    remind_3d: sub ? !!(sub as any).remind_3d : false,
+    remind_7d: sub ? !!(sub as any).remind_7d : false,
+    remind_14d: sub ? !!(sub as any).remind_14d : false,
   }));
 
-  // KEY FIX: use a stable setter that doesn't cause re-renders of parent
   const set = (k: string, v: any) => setForm((p: any) => ({ ...p, [k]: v }));
 
-  // Auto-fetch icon - only when name or website changes, not on every keystroke via timer
+  // Auto-fetch icon only in website mode
   useEffect(() => {
     if (!form.name || iconMode !== "website") return;
     clearTimeout(iconTimer.current);
@@ -105,7 +117,7 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
 
   const canNext = () => {
     if (step === 0) return !!form.name.trim() && !!form.category;
-    if (step === 1) return form.cycle === 'variable' || (!!form.amount && Number(form.amount) > 0);
+    if (step === 1) return form.cycle === "variable" || (!!form.amount && Number(form.amount) > 0);
     return true;
   };
 
@@ -119,16 +131,21 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
 
   const filteredPopular = POPULAR.filter(s => !quickSearch || s.name.toLowerCase().includes(quickSearch.toLowerCase()));
 
-  // Monthly/yearly preview
   const amt = Number(form.amount) || 0;
-  const monthly = form.cycle === "monthly" ? amt : form.cycle === "yearly" ? amt / 12 : form.cycle === "weekly" ? amt * 4.33 : form.cycle === "quarterly" ? amt / 3 : amt;
-  const yearly = form.cycle === "yearly" ? amt : form.cycle === "monthly" ? amt * 12 : form.cycle === "weekly" ? amt * 52 : form.cycle === "quarterly" ? amt * 4 : amt;
+  const monthly = form.cycle === "monthly" ? amt : form.cycle === "yearly" ? amt / 12 : form.cycle === "weekly" ? amt * 4.33 : form.cycle === "quarterly" ? amt / 3 : form.cycle === "6-months" ? amt / 6 : amt;
+  const yearly = form.cycle === "yearly" ? amt : form.cycle === "monthly" ? amt * 12 : form.cycle === "weekly" ? amt * 52 : form.cycle === "quarterly" ? amt * 4 : form.cycle === "6-months" ? amt * 2 : amt;
   const sym = CURRENCIES.find(c => c.code === form.currency)?.code || "USD";
 
+  const allRemindersOn = form.remind_1d && form.remind_3d && form.remind_7d && form.remind_14d;
+  const toggleAllReminders = () => {
+    const v = !allRemindersOn;
+    setForm((p: any) => ({ ...p, remind_1d: v, remind_3d: v, remind_7d: v, remind_14d: v }));
+  };
+
   return (
-    <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflow: "hidden" }}
-      onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", borderRadius: 16, width: "100%", maxWidth: 700, height: "min(92vh, 640px)", display: "flex", flexDirection: "column", overflow: "hidden", border: "1px solid var(--border-color)", boxShadow: "0 24px 60px rgba(0,0,0,0.4)" }}>
+    <ModalPortal><div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflow: "hidden" }}>
+      {/* No onClick on backdrop - close only via X button */}
+      <div style={{ background: "var(--surface)", borderRadius: 16, width: "100%", maxWidth: 700, height: "min(92vh, 640px)", display: "flex", flexDirection: "column", overflow: "hidden", border: "1px solid var(--border-color)", boxShadow: "0 24px 60px rgba(0,0,0,0.4)" }}>
         
         {/* Header */}
         <div style={{ padding: "18px 24px 14px", borderBottom: "1px solid var(--border-color)", flexShrink: 0, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
@@ -238,7 +255,7 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
                       <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
                       {form.icon && (form.icon.startsWith("data:") || form.icon.startsWith("http")) ? (
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                          <img src={form.icon} style={{ width: 44, height: 44, objectFit: "contain", borderRadius: 8 }} alt="" />
+                          <img src={form.icon} style={{ width: 44, height: 44, objectFit: "contain", borderRadius: 8, background: "white", padding: 4 }} alt="" onError={e => (e.currentTarget.style.display = "none")} />
                           <span style={{ fontSize: 11, color: "var(--muted)" }}>Click to change</span>
                         </div>
                       ) : (
@@ -257,7 +274,17 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
                       </div>
                     </div>
                   )}
-                  {iconMode === "url" && <input className="input" placeholder="https://example.com/logo.png" value={form.icon || ""} onChange={e => set("icon", e.target.value)} />}
+                  {iconMode === "url" && (
+                    <div>
+                      <input className="input" placeholder="https://example.com/logo.png" value={form.icon || ""} onChange={e => set("icon", e.target.value)} />
+                      {form.icon && form.icon.startsWith("http") && (
+                        <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                          <img src={form.icon} style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 6, background: "white", padding: 3, border: "1px solid var(--border-color)" }} alt="" onError={e => (e.currentTarget.style.display = "none")} />
+                          <span style={{ fontSize: 11, color: "var(--muted)" }}>Preview</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -268,7 +295,11 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 5, display: "block" }}>Amount *</label>
-                    <input className="input" type="number" step="0.01" min="0" placeholder={form.cycle === "variable" ? t("variable") : "0.00"} value={form.amount} onChange={e => set("amount", e.target.value)} disabled={form.cycle === "variable"} autoFocus />
+                    {form.cycle === "variable" ? (
+                      <div className="input" style={{ display: "flex", alignItems: "center", color: "var(--muted)", fontStyle: "italic" }}>Variable</div>
+                    ) : (
+                      <input className="input" type="number" step="0.01" min="0" placeholder="0.00" value={form.amount} onChange={e => set("amount", e.target.value)} autoFocus />
+                    )}
                   </div>
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 5, display: "block" }}>Currency</label>
@@ -282,9 +313,9 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
                   <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 8, display: "block" }}>Billing Cycle</label>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
                     {(CYCLES as readonly string[]).map(c => (
-                      <button key={c} type="button" onClick={() => set("cycle", c)}
+                      <button key={c} type="button" onClick={() => { set("cycle", c); if (c === "variable") set("amount", ""); }}
                         style={{ padding: "9px 6px", borderRadius: 8, border: `1.5px solid ${form.cycle === c ? "var(--accent)" : "var(--border-color)"}`, background: form.cycle === c ? "rgba(var(--accent-rgb),0.08)" : "var(--surface2)", color: form.cycle === c ? "var(--accent)" : "var(--muted)", fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
-                        {{"weekly":t("weekly"),"monthly":t("monthly"),"quarterly":t("quarterly"),"6-months":"6 Months","yearly":t("yearly"),"variable":t("variable")}[c] || c}
+                        {{"weekly":"Weekly","monthly":"Monthly","quarterly":"Quarterly","6-months":"6 Months","yearly":"Yearly","variable":"Variable"}[c] || c}
                       </button>
                     ))}
                   </div>
@@ -301,10 +332,10 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
                 )}
 
                 {form.type === "subscription" && (
-                  <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 8, border: "1px solid var(--border-color)" }}>
-                    <input type="checkbox" checked={!!form.trial} onChange={e => set("trial", e.target.checked)} style={{ accentColor: "var(--accent)", width: 15, height: 15, flexShrink: 0 }} />
+                  <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 8, border: `1px solid ${form.trial ? "#EF4444" : "var(--border-color)"}`, background: form.trial ? "rgba(239,68,68,0.06)" : "transparent" }}>
+                    <input type="checkbox" checked={!!form.trial} onChange={e => set("trial", e.target.checked)} style={{ accentColor: "#EF4444", width: 15, height: 15, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 500 }}>Free trial</div>
+                      <div style={{ fontSize: 14, fontWeight: 500 }}>🔴 Free trial</div>
                       <div style={{ fontSize: 12, color: "var(--muted)" }}>Flags as trial and sends reminders before it ends</div>
                     </div>
                   </label>
@@ -317,7 +348,13 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
               <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 5, display: "block" }}>Next {form.type === "bill" ? "Due Date" : "Renewal Date"}</label>
-                  <input className="input" type="date" value={form.next_date || today} onChange={e => set("next_date", e.target.value)} />
+                  {/* Use controlled value with proper onChange to avoid day reset */}
+                  <input className="input" type="date" value={form.next_date || getToday()}
+                    onChange={e => {
+                      // Only update if we have a complete valid date (prevents partial typing issues)
+                      const val = e.target.value;
+                      if (val) set("next_date", val);
+                    }} />
                 </div>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 5, display: "block" }}>Payment Method</label>
@@ -348,10 +385,14 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
             {step === 3 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px", background: "var(--surface2)", borderRadius: 10 }}>
-                  {form.icon && <img src={form.icon} width={38} height={38} style={{ borderRadius: 8, objectFit: "contain", flexShrink: 0 }} alt="" onError={e => (e.currentTarget.style.display = "none")} />}
+                  {form.icon && (
+                    <img src={form.icon} width={38} height={38} style={{ borderRadius: 8, objectFit: "contain", flexShrink: 0, background: "white", padding: 3 }} alt="" onError={e => (e.currentTarget.style.display = "none")} />
+                  )}
                   <div>
                     <div style={{ fontWeight: 700 }}>{form.name || "—"}</div>
-                    <div style={{ fontSize: 13, color: "var(--muted)" }}>{form.category} · {form.cycle} · {form.currency} {form.amount}</div>
+                    <div style={{ fontSize: 13, color: "var(--muted)" }}>
+                      {form.category} · {form.cycle} · {form.currency} {form.cycle === "variable" ? "Variable" : form.amount}
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -364,10 +405,15 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
             {/* STEP 4: REMINDERS */}
             {step === 4 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <p style={{ fontSize: 13, color: "var(--muted)" }}>Reminders before this {form.type} renews. Global defaults are in Settings → Notifications.</p>
-                {[["1","1 day before"],["3","3 days before"],["7","7 days before"],["14","14 days before"]].map(([days, label]) => (
-                  <label key={days} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 8, border: `1px solid ${form[`remind_${days}d`] ? "var(--accent)" : "var(--border-color)"}`, cursor: "pointer" }}>
-                    <input type="checkbox" checked={!!form[`remind_${days}d`]} onChange={e => set(`remind_${days}d`, e.target.checked)} style={{ accentColor: "var(--accent)", width: 15, height: 15, flexShrink: 0 }} />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>Choose when to be reminded before this {form.type} renews.</p>
+                  <button type="button" onClick={toggleAllReminders} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, border: "1px solid var(--border-color)", background: allRemindersOn ? "var(--accent)" : "var(--surface2)", color: allRemindersOn ? "white" : "var(--muted)", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>
+                    {allRemindersOn ? "✓ All On" : "Select All"}
+                  </button>
+                </div>
+                {[["remind_1d","1 day before"],["remind_3d","3 days before"],["remind_7d","7 days before"],["remind_14d","14 days before"]].map(([key, label]) => (
+                  <label key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 8, border: `1px solid ${(form as any)[key] ? "var(--accent)" : "var(--border-color)"}`, cursor: "pointer", background: (form as any)[key] ? "rgba(var(--accent-rgb),0.04)" : "transparent" }}>
+                    <input type="checkbox" checked={!!(form as any)[key]} onChange={e => set(key, e.target.checked)} style={{ accentColor: "var(--accent)", width: 15, height: 15, flexShrink: 0 }} />
                     <span style={{ fontSize: 14, fontWeight: 500 }}>{label}</span>
                   </label>
                 ))}
@@ -379,7 +425,7 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
         {/* Footer */}
         <div style={{ padding: "13px 22px", borderTop: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <button type="button" className="btn-ghost" onClick={step === 0 ? onClose : () => setStep(s => s - 1)} style={{ fontSize: 13 }}>
-            {step === 0 ? t("cancel") : "← Back"}
+            {step === 0 ? "Cancel" : "← Back"}
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ display: "flex", gap: 4 }}>

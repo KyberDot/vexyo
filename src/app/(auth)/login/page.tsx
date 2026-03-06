@@ -93,7 +93,7 @@ function LoginContent() {
 
         <div className="card" style={{ padding: 28 }}>
           {/* Mode tabs */}
-          {mode !== "forgot" && platform.magic_link_enabled && (
+          {mode !== "forgot" && !!platform.magic_link_enabled && (
             <div style={{ display: "flex", background: "var(--surface2)", borderRadius: 8, padding: 3, marginBottom: 20, gap: 2 }}>
               <button onClick={() => { setMode("password"); setError(""); setSent(false); }} style={{ flex: 1, padding: "7px", borderRadius: 6, border: "none", background: mode === "password" ? "var(--surface)" : "transparent", color: mode === "password" ? "var(--text)" : "var(--muted)", fontWeight: mode === "password" ? 600 : 400, fontSize: 13, cursor: "pointer" }}>🔑 Password</button>
               <button onClick={() => { setMode("magic"); setError(""); setSent(false); }} style={{ flex: 1, padding: "7px", borderRadius: 6, border: "none", background: mode === "magic" ? "var(--surface)" : "transparent", color: mode === "magic" ? "var(--text)" : "var(--muted)", fontWeight: mode === "magic" ? 600 : 400, fontSize: 13, cursor: "pointer" }}>✨ Magic Link</button>
@@ -153,7 +153,7 @@ function LoginContent() {
             </div>
           )}
 
-          {platform.allow_registration && mode === "password" && (
+          {!!platform.allow_registration && mode === "password" && (
             <p style={{ textAlign: "center", fontSize: 13, color: "var(--muted)", marginTop: 18 }}>
               No account? <Link href="/register" style={{ color: acc, fontWeight: 600, textDecoration: "none" }}>Create one</Link>
             </p>

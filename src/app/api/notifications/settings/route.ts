@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
   const db = getDb();
-  const fields = ["email_enabled","push_enabled","remind_1d","remind_3d","remind_7d","remind_14d","renewal_alerts","price_change_alerts","trial_end_alerts","budget_alerts","weekly_digest","monthly_report"];
+  const fields = ["email_enabled","push_enabled","remind_1d","remind_3d","remind_7d","remind_14d","renewal_alerts","price_change_alerts","trial_end_alerts","budget_alerts","overdue_alerts","weekly_digest","monthly_report"];
   const updates: string[] = []; const values: any[] = [];
   for (const f of fields) {
     if (f in body) { updates.push(`${f} = ?`); values.push(typeof body[f] === "boolean" ? (body[f] ? 1 : 0) : body[f]); }

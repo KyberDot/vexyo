@@ -23,6 +23,9 @@ export async function POST(req: NextRequest) {
   const { label } = await req.json();
   const token = crypto.randomBytes(24).toString("base64url");
   const db = getDb();
-  const r = db.prepare("INSERT INTO shared_links (user_id, token, label) VALUES (?, ?, ?)").run(userId, token, label || "Shared");
+  // Store sharer's currency in the link
+  const settings = db.prepare("SELECT currency FROM user_settings WHERE user_id = ?").get(userId) as any;
+  const currency = settings?.currency || "USD";
+  const r = db.prepare("INSERT INTO shared_links (user_id, token, label, currency) VALUES (?, ?, ?, ?)").run(userId, token, label || "Shared", currency);
   return NextResponse.json(db.prepare("SELECT * FROM shared_links WHERE id = ?").get(r.lastInsertRowid), { status: 201 });
 }

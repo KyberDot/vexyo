@@ -46,6 +46,10 @@ function migrate(db: Database.Database) {
       trial INTEGER DEFAULT 0,
       active INTEGER DEFAULT 1,
       payment_method_id INTEGER,
+      remind_1d INTEGER DEFAULT 0,
+      remind_3d INTEGER DEFAULT 0,
+      remind_7d INTEGER DEFAULT 0,
+      remind_14d INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
@@ -102,6 +106,9 @@ function migrate(db: Database.Database) {
       last4 TEXT,
       brand TEXT,
       icon TEXT,
+      account_type TEXT DEFAULT 'other',
+      currency TEXT DEFAULT 'USD',
+      balance REAL DEFAULT 0,
       member_id INTEGER,
       is_default INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now'))
@@ -128,6 +135,7 @@ function migrate(db: Database.Database) {
       price_change_alerts INTEGER DEFAULT 1,
       trial_end_alerts INTEGER DEFAULT 1,
       budget_alerts INTEGER DEFAULT 1,
+      overdue_alerts INTEGER DEFAULT 1,
       weekly_digest INTEGER DEFAULT 0,
       monthly_report INTEGER DEFAULT 1,
       updated_at TEXT DEFAULT (datetime('now'))
@@ -142,6 +150,7 @@ function migrate(db: Database.Database) {
       monthly_budget REAL DEFAULT 0,
       date_format TEXT DEFAULT 'MMM D, YYYY',
       week_start TEXT DEFAULT 'monday',
+      language TEXT DEFAULT 'en',
       updated_at TEXT DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS user_categories (
@@ -167,6 +176,7 @@ function migrate(db: Database.Database) {
       mail_pass TEXT,
       mail_from TEXT,
       mail_secure INTEGER DEFAULT 0,
+      app_url TEXT,
       updated_at TEXT DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS magic_tokens (
@@ -223,6 +233,18 @@ function migrate(db: Database.Database) {
       body_html TEXT NOT NULL,
       updated_at TEXT DEFAULT (datetime('now'))
     );
+    CREATE TABLE IF NOT EXISTS exchange_rate_cache (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      rates_json TEXT NOT NULL,
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS backups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      filename TEXT NOT NULL,
+      size INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
   `);
 
   const alters = [
@@ -232,9 +254,14 @@ function migrate(db: Database.Database) {
     `ALTER TABLE subscriptions ADD COLUMN member_id INTEGER`,
     `ALTER TABLE subscriptions ADD COLUMN payment_method_id INTEGER`,
     `ALTER TABLE subscriptions ADD COLUMN type TEXT DEFAULT 'subscription'`,
+    `ALTER TABLE subscriptions ADD COLUMN remind_1d INTEGER DEFAULT 0`,
+    `ALTER TABLE subscriptions ADD COLUMN remind_3d INTEGER DEFAULT 0`,
+    `ALTER TABLE subscriptions ADD COLUMN remind_7d INTEGER DEFAULT 0`,
+    `ALTER TABLE subscriptions ADD COLUMN remind_14d INTEGER DEFAULT 0`,
     `ALTER TABLE user_settings ADD COLUMN monthly_budget REAL DEFAULT 0`,
     `ALTER TABLE user_settings ADD COLUMN date_format TEXT DEFAULT 'MMM D, YYYY'`,
     `ALTER TABLE user_settings ADD COLUMN week_start TEXT DEFAULT 'monday'`,
+    `ALTER TABLE user_settings ADD COLUMN language TEXT DEFAULT 'en'`,
     `ALTER TABLE notifications ADD COLUMN type TEXT DEFAULT 'renewal'`,
     `ALTER TABLE notifications ADD COLUMN title TEXT NOT NULL DEFAULT ''`,
     `ALTER TABLE platform_settings ADD COLUMN favicon TEXT`,
@@ -245,14 +272,18 @@ function migrate(db: Database.Database) {
     `ALTER TABLE platform_settings ADD COLUMN mail_pass TEXT`,
     `ALTER TABLE platform_settings ADD COLUMN mail_from TEXT`,
     `ALTER TABLE platform_settings ADD COLUMN mail_secure INTEGER DEFAULT 0`,
+    `ALTER TABLE platform_settings ADD COLUMN app_url TEXT`,
     `ALTER TABLE payment_methods ADD COLUMN icon TEXT`,
     `ALTER TABLE payment_methods ADD COLUMN member_id INTEGER`,
-    `ALTER TABLE invites ADD COLUMN expires_at TEXT DEFAULT (datetime('now', '+3 days'))`,
-    `ALTER TABLE platform_settings ADD COLUMN app_url TEXT`,
+    `ALTER TABLE payment_methods ADD COLUMN account_type TEXT DEFAULT 'other'`,
+    `ALTER TABLE payment_methods ADD COLUMN currency TEXT DEFAULT 'USD'`,
+    `ALTER TABLE payment_methods ADD COLUMN balance REAL DEFAULT 0`,
     `ALTER TABLE users ADD COLUMN plan_id INTEGER`,
     `ALTER TABLE users ADD COLUMN plan_expires_at TEXT`,
     `ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'en'`,
-    `ALTER TABLE user_settings ADD COLUMN language TEXT DEFAULT 'en'`,
+    `ALTER TABLE notification_settings ADD COLUMN overdue_alerts INTEGER DEFAULT 1`,
+    `ALTER TABLE invites ADD COLUMN expires_at TEXT DEFAULT (datetime('now', '+3 days'))`,
+    `ALTER TABLE shared_links ADD COLUMN currency TEXT`,
   ];
   for (const sql of alters) { try { db.exec(sql); } catch {} }
 }

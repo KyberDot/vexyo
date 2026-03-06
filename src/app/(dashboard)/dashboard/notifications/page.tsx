@@ -173,6 +173,7 @@ export default function NotificationsPage() {
               ["renewal_alerts", "Renewal alerts", "Notify before subscriptions renew"],
               ["price_change_alerts", "Price change alerts", "When subscription prices change"],
               ["trial_end_alerts", "Trial ending alerts", "Before free trials expire"],
+              ["overdue_alerts", "Overdue alerts", "When a payment becomes overdue"],
               ["budget_alerts", "Budget alerts", "When spending approaches limits"],
             ].map(([k, label, desc]) => (
               <div key={k} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--border-color)" }}>

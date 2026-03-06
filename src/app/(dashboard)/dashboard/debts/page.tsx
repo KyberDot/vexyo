@@ -15,7 +15,7 @@ interface Debt {
 }
 
 export default function DebtsPage() {
-  const { currencySymbol, convertToDisplay, settings, t } = useSettings();
+  const { currencySymbol, convertToDisplay, settings } = useSettings();
   const [debts, setDebts] = useState<Debt[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +54,7 @@ export default function DebtsPage() {
   const totalDebt = debts.filter(d => d.active).reduce((a, d) => a + convertToDisplay(d.amount, d.currency), 0);
   const totalPaid = debts.filter(d => d.active).reduce((a, d) => a + convertToDisplay(d.paid, d.currency), 0);
 
-  if (loading) return <div style={{ color: "var(--muted)" }}>Loading...</div>;
+  
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }} className="fade-in">

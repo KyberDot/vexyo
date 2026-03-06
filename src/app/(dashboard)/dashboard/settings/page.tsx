@@ -103,6 +103,75 @@ export default function SettingsPage() {
           <button className="btn-ghost" style={{ color: "#EF4444", borderColor: "#EF444440" }} onClick={() => signOut({ callbackUrl: "/login" })}>Sign out</button>
         </div>
       </div>
+
+      {/* Backup & Restore */}
+      <BackupSection />
+    </div>
+  );
+}
+
+function BackupSection() {
+  const [backups, setBackups] = useState<any[]>([]);
+  const [creating, setCreating] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const load = async () => {
+    const r = await fetch("/api/backup").then(r => r.json());
+    if (Array.isArray(r)) setBackups(r);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const create = async () => {
+    setCreating(true);
+    try {
+      const r = await fetch("/api/backup", { method: "POST" }).then(r => r.json());
+      if (r.id) { setMsg("Backup created successfully"); await load(); }
+      else setMsg("Failed to create backup");
+    } catch { setMsg("Error creating backup"); }
+    setCreating(false);
+    setTimeout(() => setMsg(""), 3000);
+  };
+
+  const del = async (id: number) => {
+    if (!confirm("Delete this backup?")) return;
+    await fetch("/api/backup", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    setBackups(p => p.filter(b => b.id !== id));
+  };
+
+  const download = (id: number, filename: string) => {
+    const a = document.createElement("a");
+    a.href = `/api/backup/${id}`;
+    a.download = filename;
+    a.click();
+  };
+
+  const fmtBytes = (b: number) => b < 1024 ? `${b}B` : b < 1048576 ? `${(b/1024).toFixed(1)}KB` : `${(b/1048576).toFixed(1)}MB`;
+
+  return (
+    <div className="card" style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      <div style={{ paddingBottom: 16, marginBottom: 16, borderBottom: "1px solid var(--border-color)" }}>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Backup & Restore</div>
+        <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 12 }}>Create and manage backups of your subscriptions, bills, and settings</div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button className="btn-primary" onClick={create} disabled={creating}>{creating ? "Creating..." : "Create Backup"}</button>
+          {msg && <span style={{ fontSize: 13, color: msg.includes("success") ? "#10B981" : "#EF4444" }}>{msg}</span>}
+        </div>
+      </div>
+      {backups.length === 0 ? (
+        <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center", padding: "16px 0" }}>No backups yet. Create your first backup above.</div>
+      ) : backups.map(b => (
+        <div key={b.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--border-color)" }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>{b.filename}</div>
+            <div style={{ fontSize: 11, color: "var(--muted)" }}>{new Date(b.created_at).toLocaleString()} · {fmtBytes(b.size)}</div>
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button className="btn-ghost" style={{ fontSize: 12, padding: "4px 10px" }} onClick={() => download(b.id, b.filename)}>⬇ Download</button>
+            <button style={{ background: "none", border: "none", color: "#EF4444", cursor: "pointer", fontSize: 13 }} onClick={() => del(b.id)}>🗑️</button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

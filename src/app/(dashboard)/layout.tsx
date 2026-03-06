@@ -13,7 +13,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const { platform, userAvatar, userName, userRole, reloadProfile, t } = useSettings();
+  const { platform, userAvatar, userName, userRole, reloadProfile, t, settings, saveSettings } = useSettings();
 
   const NAV = useMemo(() => [
     { section: "Main", items: [
@@ -190,6 +190,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {notifCount > 0 && <span style={{ position: "absolute", top: 6, right: 6, width: 8, height: 8, borderRadius: 99, background: "#EF4444", border: "1.5px solid var(--surface)" }} />}
               </Link>
               <LanguageSwitcher />
+              {/* Dark/Light mode toggle */}
+              <button
+                onClick={() => { const newTheme = settings.theme === "dark" ? "light" : "dark"; saveSettings({ ...settings, theme: newTheme }); }}
+                title={settings.theme === "dark" ? "Switch to Light mode" : "Switch to Dark mode"}
+                style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, background: "none", border: "none", cursor: "pointer", fontSize: 17, color: "var(--muted)" }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--surface2)"}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
+              >{settings.theme === "dark" ? "☀️" : "🌙"}</button>
               <Link href="/dashboard/settings" title="Settings" style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, color: "var(--muted)", textDecoration: "none", fontSize: 17 }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--surface2)"}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>⚙️</Link>
