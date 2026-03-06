@@ -10,7 +10,7 @@ import { useSearch } from "@/app/(dashboard)/layout";
 import { useToast } from "@/components/Toast";
 
 export default function BillsPage() {
-  const { currencySymbol, convertToDisplay } = useSettings();
+  const { currencySymbol, convertToDisplay, t } = useSettings();
   const { subs, loading, add, update, remove } = useSubscriptions();
   const { search } = useSearch();
   const [showModal, setShowModal] = useState(false);
@@ -59,7 +59,7 @@ export default function BillsPage() {
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Bills</h1>
           <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 2 }}>Track all your recurring bills and due dates</p>
         </div>
-        <button className="btn-primary" onClick={() => { setEditBill(null); setShowModal(true); }}>+ Add Bill</button>
+        <button className="btn-primary" onClick={() => { setEditBill(null); setShowModal(true); }}>+ {t("addBill")}</button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
@@ -95,7 +95,7 @@ export default function BillsPage() {
           <div style={{ padding: 48, textAlign: "center" }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>🧾</div>
             <div style={{ fontWeight: 600, marginBottom: 8 }}>{showInactive ? "No inactive bills" : "No bills yet"}</div>
-            {!showInactive && <button className="btn-primary" onClick={() => setShowModal(true)}>Add Bill</button>}
+            {!showInactive && <button className="btn-primary" onClick={() => setShowModal(true)}>{t("addBill")}</button>}
           </div>
         ) : bills.map((b, i) => {
           const mo = convertToDisplay(toMonthly(b.amount, b.cycle), b.currency);

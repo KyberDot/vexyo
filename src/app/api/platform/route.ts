@@ -5,8 +5,10 @@ import { getDb } from "@/lib/db";
 
 export async function GET() {
   const db = getDb();
-  const p = db.prepare("SELECT app_name, logo, favicon, primary_color, allow_registration, magic_link_enabled FROM platform_settings WHERE id = 1").get();
-  return NextResponse.json(p || {});
+  const p = db.prepare("SELECT app_name, logo, favicon, primary_color, allow_registration, magic_link_enabled, app_url FROM platform_settings WHERE id = 1").get() as any;
+  const envUrl = process.env.NEXTAUTH_URL || "";
+  return NextResponse.json({ ...(p || {}), app_url: (p as any)?.app_url || envUrl });
+
 }
 
 export async function PATCH(req: NextRequest) {
@@ -16,7 +18,7 @@ export async function PATCH(req: NextRequest) {
   const user = db.prepare("SELECT role FROM users WHERE id = ?").get((session.user as any).id) as any;
   if (user?.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const body = await req.json();
-  const fields = ["app_name","logo","favicon","primary_color","allow_registration","magic_link_enabled","mail_host","mail_port","mail_user","mail_pass","mail_from","mail_secure"];
+  const fields = ["app_name","logo","favicon","primary_color","allow_registration","magic_link_enabled","mail_host","mail_port","mail_user","mail_pass","mail_from","mail_secure","app_url"];
   const updates: string[] = []; const values: any[] = [];
   for (const f of fields) {
     if (f in body) { updates.push(`${f} = ?`); values.push(typeof body[f] === "boolean" ? (body[f] ? 1 : 0) : body[f]); }

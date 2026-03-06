@@ -11,7 +11,7 @@ import { useToast } from "@/components/Toast";
 
 export default function SubscriptionsPage() {
   const { subs, loading, add, update, remove } = useSubscriptions();
-  const { currencySymbol, convertToDisplay, categories } = useSettings();
+  const { currencySymbol, convertToDisplay, categories, t } = useSettings();
   const { search } = useSearch();
   const [showModal, setShowModal] = useState(false);
   const [payHistorySub, setPayHistorySub] = useState<Subscription | null>(null);
@@ -62,7 +62,7 @@ export default function SubscriptionsPage() {
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Subscriptions</h1>
           <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 2 }}>Manage all your recurring subscription payments</p>
         </div>
-        <button className="btn-primary" onClick={() => { setEditSub(null); setShowModal(true); }}>+ Add Subscription</button>
+        <button className="btn-primary" onClick={() => { setEditSub(null); setShowModal(true); }}>+ {t("addSubscription")}</button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
@@ -73,7 +73,7 @@ export default function SubscriptionsPage() {
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <select className="select" value={filterCat} onChange={e => setFilterCat(e.target.value)} style={{ height: 34, fontSize: 13 }}>
-          <option value="All">All Categories</option>
+          <option value="All">{t("allCategories")}</option>
           {categories.map(c => <option key={c.name} value={c.name}>{c.icon} {c.name}</option>)}
         </select>
         <select className="select" value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ height: 34, fontSize: 13 }}>
@@ -83,8 +83,8 @@ export default function SubscriptionsPage() {
         </select>
         {/* Active / Inactive toggle */}
         <div style={{ display: "flex", background: "var(--surface2)", borderRadius: 8, padding: 3, gap: 2 }}>
-          <button onClick={() => setShowInactive(false)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", background: !showInactive ? "var(--surface)" : "transparent", color: !showInactive ? "var(--text)" : "var(--muted)", fontSize: 12, fontWeight: !showInactive ? 600 : 400, cursor: "pointer" }}>Active</button>
-          <button onClick={() => setShowInactive(true)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", background: showInactive ? "var(--surface)" : "transparent", color: showInactive ? "var(--text)" : "var(--muted)", fontSize: 12, fontWeight: showInactive ? 600 : 400, cursor: "pointer" }}>Inactive</button>
+          <button onClick={() => setShowInactive(false)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", background: !showInactive ? "var(--surface)" : "transparent", color: !showInactive ? "var(--text)" : "var(--muted)", fontSize: 12, fontWeight: !showInactive ? 600 : 400, cursor: "pointer" }}>{t("active")}</button>
+          <button onClick={() => setShowInactive(true)} style={{ padding: "5px 12px", borderRadius: 6, border: "none", background: showInactive ? "var(--surface)" : "transparent", color: showInactive ? "var(--text)" : "var(--muted)", fontSize: 12, fontWeight: showInactive ? 600 : 400, cursor: "pointer" }}>{t("inactive")}</button>
         </div>
         {search && <span style={{ fontSize: 13, color: "var(--muted)" }}>"{search}"</span>}
         <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: "auto" }}>{filtered.length} result{filtered.length !== 1 ? "s" : ""}</span>
@@ -98,7 +98,7 @@ export default function SubscriptionsPage() {
           <div style={{ padding: 48, textAlign: "center" }}>
             <div style={{ fontSize: 36, marginBottom: 10 }}>📋</div>
             <div style={{ fontWeight: 600, marginBottom: 8 }}>{showInactive ? "No inactive subscriptions" : "No subscriptions yet"}</div>
-            {!showInactive && <button className="btn-primary" onClick={() => setShowModal(true)}>Add Subscription</button>}
+            {!showInactive && <button className="btn-primary" onClick={() => setShowModal(true)}>{t("addSubscription")}</button>}
           </div>
         ) : filtered.map((s, i) => {
           const mo = toMonthly(s.amount, s.cycle);

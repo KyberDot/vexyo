@@ -191,6 +191,7 @@ function migrate(db: Database.Database) {
       token TEXT UNIQUE NOT NULL,
       invited_by INTEGER REFERENCES users(id),
       used INTEGER DEFAULT 0,
+      expires_at TEXT DEFAULT (datetime('now', '+3 days')),
       created_at TEXT DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS shared_links (
@@ -246,6 +247,8 @@ function migrate(db: Database.Database) {
     `ALTER TABLE platform_settings ADD COLUMN mail_secure INTEGER DEFAULT 0`,
     `ALTER TABLE payment_methods ADD COLUMN icon TEXT`,
     `ALTER TABLE payment_methods ADD COLUMN member_id INTEGER`,
+    `ALTER TABLE invites ADD COLUMN expires_at TEXT DEFAULT (datetime('now', '+3 days'))`,
+    `ALTER TABLE platform_settings ADD COLUMN app_url TEXT`,
     `ALTER TABLE users ADD COLUMN plan_id INTEGER`,
     `ALTER TABLE users ADD COLUMN plan_expires_at TEXT`,
     `ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'en'`,

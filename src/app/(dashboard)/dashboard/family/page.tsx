@@ -11,7 +11,7 @@ const COLORS = ["#6366F1","#10B981","#F59E0B","#EF4444","#8B5CF6","#EC4899","#06
 
 export default function FamilyPage() {
   const { subs, loading } = useSubscriptions();
-  const { currencySymbol, convertToDisplay } = useSettings();
+  const { currencySymbol, convertToDisplay, t } = useSettings();
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editMember, setEditMember] = useState<FamilyMember | null>(null);

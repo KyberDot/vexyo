@@ -15,7 +15,7 @@ interface Debt {
 }
 
 export default function DebtsPage() {
-  const { currencySymbol, convertToDisplay, settings } = useSettings();
+  const { currencySymbol, convertToDisplay, settings, t } = useSettings();
   const [debts, setDebts] = useState<Debt[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

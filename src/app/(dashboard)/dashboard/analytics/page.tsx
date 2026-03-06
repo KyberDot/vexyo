@@ -73,11 +73,11 @@ export default function AnalyticsPage() {
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>Spending by Category</div>
           {catData.length === 0 ? <div style={{ color: "var(--muted)", textAlign: "center", padding: 24 }}>No data yet</div> : (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={catData} layout="vertical" margin={{ left: 0, right: 10 }}>
+              <BarChart data={catData} layout="vertical" margin={{ left: 0, right: 10 }} style={{ cursor: "default" }}>
                 <XAxis type="number" tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} tickFormatter={v => `${currencySymbol}${v}`} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} width={90} />
                 <Tooltip formatter={(v: any) => [`${currencySymbol}${v}`, "Monthly"]} contentStyle={{ background: "#1A1D27", border: "1px solid #2A2D3A", borderRadius: 8, fontSize: 12, color: "#F1F5F9" }} labelStyle={{ color: "#94A3B8" }} itemStyle={{ color: "#F1F5F9" }} />
-                <Bar dataKey="spend" radius={4}>
+                <Bar dataKey="spend" radius={4} cursor="default" activeBar={{ fillOpacity: 0.85, stroke: "none" }}>
                   {catData.map((c, i) => <Cell key={i} fill={c.color} />)}
                 </Bar>
               </BarChart>

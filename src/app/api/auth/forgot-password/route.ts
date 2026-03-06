@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { getDb } from "@/lib/db";
 import { getMailTransporter } from "@/lib/mailer";
-import { emailTemplate } from "@/lib/emailTemplate";
+import { emailTemplate, renderDbTemplate } from "@/lib/emailTemplate";
 import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
@@ -21,15 +21,8 @@ export async function POST(req: NextRequest) {
     try {
       await mail.transporter.sendMail({
         from: mail.from, to: email,
-        subject: `Reset your ${mail.appName} password`,
-        html: emailTemplate({
-          appName: mail.appName,
-          title: "Reset your password",
-          body: "We received a request to reset the password for your account. Click the button below to set a new password. This link expires in 1 hour.",
-          buttonText: "Reset Password",
-          buttonUrl: link,
-          footer: `Sent to ${email} · If you didn't request a password reset, you can ignore this email.`,
-        }),
+        subject: (renderDbTemplate("password_reset", { appName: mail.appName, link }))?.subject || `Reset your ${mail.appName} password`,
+        html: (() => { const t = renderDbTemplate("password_reset", { appName: mail.appName, link }); return t?.html || emailTemplate({ appName: mail.appName, title: "Reset your password", body: "Click the button below to reset your password. This link expires in 1 hour.", buttonText: "Reset Password", buttonUrl: link }); })(),
       });
       return NextResponse.json({ ok: true, sent: true });
     } catch {}

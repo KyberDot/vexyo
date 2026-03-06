@@ -40,7 +40,7 @@ interface Props {
   paymentMethods?: any[];
 }
 const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onSave, onClose, familyMembers = [], paymentMethods = [] }: Props) {
-  const { settings, categories } = useSettings();
+  const { settings, categories, t } = useSettings();
   const isEditing = !!sub;
 
   const [step, setStep] = useState(0);
@@ -268,7 +268,7 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 5, display: "block" }}>Amount *</label>
-                    <input className="input" type="number" step="0.01" min="0" placeholder={form.cycle === "variable" ? "Variable" : "0.00"} value={form.amount} onChange={e => set("amount", e.target.value)} disabled={form.cycle === "variable"} autoFocus />
+                    <input className="input" type="number" step="0.01" min="0" placeholder={form.cycle === "variable" ? t("variable") : "0.00"} value={form.amount} onChange={e => set("amount", e.target.value)} disabled={form.cycle === "variable"} autoFocus />
                   </div>
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 5, display: "block" }}>Currency</label>
@@ -284,7 +284,7 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
                     {(CYCLES as readonly string[]).map(c => (
                       <button key={c} type="button" onClick={() => set("cycle", c)}
                         style={{ padding: "9px 6px", borderRadius: 8, border: `1.5px solid ${form.cycle === c ? "var(--accent)" : "var(--border-color)"}`, background: form.cycle === c ? "rgba(var(--accent-rgb),0.08)" : "var(--surface2)", color: form.cycle === c ? "var(--accent)" : "var(--muted)", fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
-                        {{"weekly":"Weekly","monthly":"Monthly","quarterly":"Quarterly","6-months":"6 Months","yearly":"Yearly","variable":"Variable"}[c] || c}
+                        {{"weekly":t("weekly"),"monthly":t("monthly"),"quarterly":t("quarterly"),"6-months":"6 Months","yearly":t("yearly"),"variable":t("variable")}[c] || c}
                       </button>
                     ))}
                   </div>
@@ -379,7 +379,7 @@ const SubModal = memo(function SubModal({ sub, defaultType = "subscription", onS
         {/* Footer */}
         <div style={{ padding: "13px 22px", borderTop: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <button type="button" className="btn-ghost" onClick={step === 0 ? onClose : () => setStep(s => s - 1)} style={{ fontSize: 13 }}>
-            {step === 0 ? "Cancel" : "← Back"}
+            {step === 0 ? t("cancel") : "← Back"}
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ display: "flex", gap: 4 }}>

@@ -9,7 +9,7 @@ const BRANDS = ["Visa","Mastercard","Amex","Discover","PayPal","Apple Pay","Goog
 const BRAND_ICONS: Record<string, string> = { "Visa":"💳","Mastercard":"💳","Amex":"💳","Discover":"💳","PayPal":"🅿️","Apple Pay":"🍎","Google Pay":"🔷","Cash":"💵","Bank Transfer":"🏦","Crypto":"🔐","Other":"💳" };
 
 export default function PaymentsPage() {
-  const { currencySymbol, convertToDisplay } = useSettings();
+  const { currencySymbol, convertToDisplay, t } = useSettings();
   const { subs } = useSubscriptions();
   const [methods, setMethods] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);

@@ -10,7 +10,7 @@ import { useSession } from "next-auth/react";
 
 export default function DashboardPage() {
   const { subs, loading, add } = useSubscriptions();
-  const { settings, currencySymbol, convertToDisplay, platform } = useSettings();
+  const { settings, currencySymbol, convertToDisplay, platform, t } = useSettings();
   const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
   const [debts, setDebts] = useState<any[]>([]);
