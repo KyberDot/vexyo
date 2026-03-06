@@ -3,6 +3,7 @@ import ModalPortal from "@/components/ModalPortal";
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/Toast";
 import { useSettings } from "@/lib/SettingsContext";
+import { useSession } from "next-auth/react"; // <-- Added this import
 
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -39,6 +40,7 @@ const TEMPLATE_VARS: Record<string, string[]> = { magic_link: ["{{appName}}", "{
 export default function AdminPage() {
   const { userRole, platform, savePlatform, t } = useSettings();
   const { success, error: toastError } = useToast();
+  const { data: session } = useSession(); // <-- Added this to get your email
   const [users, setUsers] = useState<any[]>([]);
   const [invites, setInvites] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
@@ -78,7 +80,28 @@ export default function AdminPage() {
 
   const savePlatformTab = async () => { setSaving(true); await savePlatform(platformForm); success("Platform settings saved"); setSaving(false); };
   const saveMailSettings = async () => { setSaving(true); const r = await fetch("/api/platform", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(mailForm) }); if (r.ok) success("Mail settings saved"); else toastError("Failed to save mail settings"); setSaving(false); };
-  const testMail = async () => { await saveMailSettings(); setMailTest({ status: "loading", msg: "" }); const res = await fetch("/api/admin/test-mail", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) }); const d = await res.json(); setMailTest({ status: res.ok ? "ok" : "error", msg: res.ok ? d.message : d.error }); };
+  
+  // <-- UPDATED THIS FUNCTION -->
+  const testMail = async () => { 
+    const targetEmail = session?.user?.email;
+    
+    if (!targetEmail) {
+      toastError("Could not find your email address");
+      return;
+    }
+
+    await saveMailSettings(); 
+    setMailTest({ status: "loading", msg: "" }); 
+    
+    const res = await fetch("/api/admin/test-mail", { 
+      method: "POST", 
+      headers: { "Content-Type": "application/json" }, 
+      body: JSON.stringify({ email: targetEmail }) 
+    }); 
+    
+    const d = await res.json(); 
+    setMailTest({ status: res.ok ? "ok" : "error", msg: res.ok ? d.message : d.error }); 
+  };
 
   const sendInvite = async () => {
     if (!inviteEmail) return;
