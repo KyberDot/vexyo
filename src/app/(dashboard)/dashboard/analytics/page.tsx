@@ -29,6 +29,62 @@ const RANGE_CONFIG: Record<Range, { months: string[]; factors: number[] }> = {
   },
 };
 
+function DonutChart({ catData, monthlyTotal, currencySymbol }: { catData: any[]; monthlyTotal: number; currencySymbol: string }) {
+  const [hovered, setHovered] = useState<{ name: string; spend: number; color: string } | null>(null);
+
+  return (
+    <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 24 }}>
+      <div style={{ position: "relative", flexShrink: 0 }}>
+        <ResponsiveContainer width={180} height={180}>
+          <PieChart>
+            <Pie
+              data={catData} dataKey="spend" cx="50%" cy="50%"
+              innerRadius={52} outerRadius={82} paddingAngle={2} strokeWidth={0}
+              onMouseEnter={(d) => setHovered({ name: d.name, spend: d.spend, color: d.color })}
+              onMouseLeave={() => setHovered(null)}
+            >
+              {catData.map((c, i) => (
+                <Cell key={i} fill={c.color} opacity={hovered && hovered.name !== c.name ? 0.4 : 1} style={{ cursor: "pointer", outline: "none" }} />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+        {/* Center label — shows hovered or total */}
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", textAlign: "center", pointerEvents: "none", transition: "all 0.15s" }}>
+          {hovered ? (
+            <>
+              <div style={{ fontSize: 13, fontWeight: 800, color: hovered.color }}>{currencySymbol}{fmt(hovered.spend)}</div>
+              <div style={{ fontSize: 9, color: "var(--muted)", maxWidth: 60, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{hovered.name}</div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 14, fontWeight: 800 }}>{currencySymbol}{fmt(monthlyTotal)}</div>
+              <div style={{ fontSize: 10, color: "var(--muted)" }}>/mo</div>
+            </>
+          )}
+        </div>
+      </div>
+      {/* Legend */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+        {catData.slice(0, 7).map(c => {
+          const pct = monthlyTotal > 0 ? (c.spend / monthlyTotal) * 100 : 0;
+          return (
+            <div key={c.name}
+              style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, opacity: hovered && hovered.name !== c.name ? 0.4 : 1, transition: "opacity 0.15s", cursor: "default" }}
+              onMouseEnter={() => setHovered({ name: c.name, spend: c.spend, color: c.color })}
+              onMouseLeave={() => setHovered(null)}
+            >
+              <div style={{ width: 9, height: 9, borderRadius: 2, background: c.color, flexShrink: 0 }} />
+              <span style={{ flex: 1, color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.icon} {c.name}</span>
+              <span style={{ fontWeight: 700, color: "var(--text)", flexShrink: 0 }}>{pct.toFixed(0)}%</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function AnalyticsPage() {
   const { subs } = useSubscriptions();
   const { currencySymbol, convertToDisplay, categories, settings, t, platform } = useSettings();
@@ -242,41 +298,11 @@ export default function AnalyticsPage() {
           {catData.length === 0
             ? <div style={{ color: "var(--muted)", textAlign: "center", padding: 24 }}>No data yet</div>
             : (
-              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 24 }}>
-                {/* Donut */}
-                <div style={{ position: "relative", flexShrink: 0 }}>
-                  <ResponsiveContainer width={180} height={180}>
-                    <PieChart>
-                      <Pie data={catData} dataKey="spend" cx="50%" cy="50%" innerRadius={52} outerRadius={82} paddingAngle={2} strokeWidth={0}>
-                        {catData.map((c, i) => <Cell key={i} fill={c.color} />)}
-                      </Pie>
-                      <Tooltip
-                        formatter={(v: any) => [`${currencySymbol}${fmt(Number(v))}`, ""]}
-                        contentStyle={{ background: "var(--surface)", border: "1px solid var(--border-color)", borderRadius: 8, fontSize: 11 }}
-                        labelStyle={{ color: "var(--text)" }}
-                        itemStyle={{ color: "var(--text)" }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", textAlign: "center", pointerEvents: "none" }}>
-                    <div style={{ fontSize: 14, fontWeight: 800 }}>{currencySymbol}{fmt(monthlyTotal)}</div>
-                    <div style={{ fontSize: 10, color: "var(--muted)" }}>/mo</div>
-                  </div>
-                </div>
-                {/* Legend */}
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-                  {catData.slice(0, 7).map(c => {
-                    const pct = monthlyTotal > 0 ? (c.spend / monthlyTotal) * 100 : 0;
-                    return (
-                      <div key={c.name} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-                        <div style={{ width: 9, height: 9, borderRadius: 2, background: c.color, flexShrink: 0 }} />
-                        <span style={{ flex: 1, color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.icon} {c.name}</span>
-                        <span style={{ fontWeight: 700, color: "var(--text)", flexShrink: 0 }}>{pct.toFixed(0)}%</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <DonutChart
+                catData={catData}
+                monthlyTotal={monthlyTotal}
+                currencySymbol={currencySymbol}
+              />
             )}
         </div>
       </div>
