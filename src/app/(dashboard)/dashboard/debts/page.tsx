@@ -131,7 +131,7 @@ export default function DebtsPage() {
         <div className="card">
           <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>Short / Long Term</div>
           <div style={{ fontSize: 20, fontWeight: 800 }}>{shortCount} <span style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500 }}>/ {longCount}</span></div>
-          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>short / long term</div>
+          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>overview</div>
         </div>
         <div className="card">
           <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>Overdue</div>
