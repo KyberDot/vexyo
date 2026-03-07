@@ -5,7 +5,7 @@ import { useSettings } from "@/lib/SettingsContext";
 import { toMonthly, daysUntil, fmt } from "@/types";
 import SubModal from "@/components/SubModal";
 import Link from "next/link";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useSession } from "next-auth/react";
 
 export default function DashboardPage() {
@@ -210,7 +210,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Upcoming renewals — original layout exactly */}
-        <div className="card" style={{ maxHeight: "320px", display: "flex", flexDirection: "column" }}>
+        <div className="card" style={{ maxHeight: "325px", display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexShrink: 0 }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: 16 }}>🔔 Upcoming Renewals</div>
@@ -249,17 +249,36 @@ export default function DashboardPage() {
 
       {/* Spend trend */}
       <div className="card">
-        <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}>
-          <span>📈</span> Monthly Spend Trend
+        <div style={{ marginBottom: 4 }}>
+          <div style={{ fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", gap: 6 }}>
+            <span>📈</span> Spending Trend
+          </div>
+          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Monthly subscription spending over time</div>
         </div>
-        <ResponsiveContainer width="100%" height={160}>
-          <LineChart data={monthlyData}>
-            <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} tickFormatter={v => `${currencySymbol}${v}`} />
-            <Tooltip formatter={(v: any) => [`${currencySymbol}${v}`, "Spend"]} contentStyle={{ background: "var(--surface)", border: "1px solid var(--border-color)", borderRadius: 8, fontSize: 12 }} />
-            <Line type="natural" dataKey="amount" stroke={accentColor} strokeWidth={2.5} dot={{ fill: accentColor, r: 3 }} activeDot={{ r: 5 }} />
-          </LineChart>
+        <ResponsiveContainer width="100%" height={190}>
+          <AreaChart data={monthlyData} margin={{ top: 20, right: 4, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={accentColor} stopOpacity={0.35} />
+                <stop offset="100%" stopColor={accentColor} stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} dy={6} />
+            <YAxis tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} tickFormatter={v => `${currencySymbol}${v}`} width={52} />
+            <Tooltip
+              formatter={(v: any) => [`${currencySymbol}${fmt(v)}`, "Spend"]}
+              contentStyle={{ background: "var(--surface)", border: "1px solid var(--border-color)", borderRadius: 8, fontSize: 12 }}
+              cursor={{ stroke: "var(--border-color)", strokeWidth: 1 }}
+            />
+            <Area type="monotoneX" dataKey="amount" stroke={accentColor} strokeWidth={2} fill="url(#spendGrad)" dot={false} activeDot={{ r: 4, fill: accentColor, stroke: "var(--surface)", strokeWidth: 2 }} />
+          </AreaChart>
         </ResponsiveContainer>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, fontSize: 13, fontWeight: 600 }}>
+          {monthlyData.length >= 2 && monthlyData[monthlyData.length - 1].amount <= monthlyData[monthlyData.length - 2].amount
+            ? <><span style={{ color: "#10B981" }}>Trending down this month</span> <span style={{ fontSize: 16 }}>↘</span></>
+            : <><span style={{ color: "#EF4444" }}>Trending up this month</span> <span style={{ fontSize: 16 }}>↗</span></>}
+        </div>
+        <div style={{ fontSize: 12, color: "var(--muted)" }}>Last {monthlyData.length} months</div>
       </div>
 
       {/* Debts analytics */}
