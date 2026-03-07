@@ -31,7 +31,9 @@ export default function PaymentsPage() {
   const [editMethod, setEditMethod] = useState<any>(null);
   const [form, setForm] = useState<any>({
     label: "", account_type: "bank", last4: "", icon: "",
-    currency: settings.currency || "USD", balance: "", member_id: null, is_default: false,
+    currency: settings.currency || "USD",
+    balance_currency: settings.currency || "USD",
+    balance: "", member_id: null, is_default: false,
   });
   const [saving, setSaving] = useState(false);
   const [iconMode, setIconMode] = useState<"auto" | "upload" | "url">("auto");
@@ -57,14 +59,24 @@ export default function PaymentsPage() {
 
   const openAdd = () => {
     setEditMethod(null);
-    setForm({ label: "", account_type: "bank", last4: "", icon: "", currency: settings.currency || "USD", balance: "", member_id: null, is_default: false });
+    setForm({
+      label: "", account_type: "bank", last4: "", icon: "",
+      currency: settings.currency || "USD",
+      balance_currency: settings.currency || "USD",
+      balance: "", member_id: null, is_default: false,
+    });
     setIconMode("auto");
     setShowModal(true);
   };
 
   const openEdit = (m: any) => {
     setEditMethod(m);
-    setForm({ ...m, balance: m.balance != null ? String(m.balance) : "" });
+    setForm({
+      ...m,
+      balance: m.balance != null ? String(m.balance) : "",
+      // FIX: explicitly carry balance_currency from the saved record
+      balance_currency: m.balance_currency || m.currency || settings.currency || "USD",
+    });
     setIconMode(m.icon?.startsWith("data:") ? "upload" : m.icon?.startsWith("http") ? "url" : "auto");
     setShowModal(true);
   };
@@ -75,7 +87,8 @@ export default function PaymentsPage() {
     const body = {
       ...form,
       currency: form.currency || settings.currency || "USD",
-      balance_currency: form.currency || settings.currency || "USD",
+      // FIX: balance_currency always mirrors whatever currency was selected
+      balance_currency: form.balance_currency || form.currency || settings.currency || "USD",
       icon: iconMode === "auto" ? (at?.icon || "💰") : (form.icon || at?.icon || "💰"),
       balance: Number(form.balance) || 0,
       is_default: !!form.is_default,
@@ -308,7 +321,11 @@ export default function PaymentsPage() {
                 <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, padding: "18px 20px", background: "rgba(255,255,255,0.02)", borderRadius: 12, border: "1px solid var(--border-color)" }}>
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", marginBottom: 5, display: "block" }}>Currency</label>
-                    <select className="select" style={{ width: "100%" }} value={form.currency} onChange={e => setF("currency", e.target.value)}>
+                    <select className="select" style={{ width: "100%" }} value={form.currency}
+                      onChange={e => {
+                        // FIX: update both currency and balance_currency together
+                        setForm((p: any) => ({ ...p, currency: e.target.value, balance_currency: e.target.value }));
+                      }}>
                       {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
                     </select>
                   </div>
