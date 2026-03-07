@@ -18,14 +18,35 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const userId = await getUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { label } = await req.json();
-  const token = crypto.randomBytes(24).toString("base64url");
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { subscription_ids } = await req.json();
+  if (!Array.isArray(subscription_ids) || subscription_ids.length === 0) {
+    return NextResponse.json({ error: "Selection required" }, { status: 400 });
+  }
+
   const db = getDb();
-  // Store sharer's currency in the link
-  const settings = db.prepare("SELECT currency FROM user_settings WHERE user_id = ?").get(userId) as any;
-  const currency = settings?.currency || "USD";
-  const r = db.prepare("INSERT INTO shared_links (user_id, token, label, currency) VALUES (?, ?, ?, ?)").run(userId, token, label || "Shared", currency);
-  return NextResponse.json(db.prepare("SELECT * FROM shared_links WHERE id = ?").get(r.lastInsertRowid), { status: 201 });
+  const token = crypto.randomBytes(16).toString("hex");
+  const userId = (session.user as any).id;
+
+  // 1. Create the shared link record
+  const result = db.prepare(`
+    INSERT INTO shared_links (user_id, token, active) 
+    VALUES (?, ?, 1)
+  `).run(userId, token);
+  
+  const linkId = result.lastInsertRowid;
+
+  // 2. Map the specific subscriptions to this link
+  // NOTE: You'll need a table named shared_link_items (link_id, subscription_id)
+  const insertStmt = db.prepare(`INSERT INTO shared_link_items (link_id, subscription_id) VALUES (?, ?)`);
+  
+  const transaction = db.transaction((ids: number[]) => {
+    for (const id of ids) insertStmt.run(linkId, id);
+  });
+
+  transaction(subscription_ids);
+
+  return NextResponse.json({ token });
 }
