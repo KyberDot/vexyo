@@ -9,6 +9,7 @@ export default function SharesPage() {
   const { success, error: toastError } = useToast();
   const [links, setLinks] = useState<any[]>([]);
   const [creating, setCreating] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [label, setLabel] = useState("");
   
   // Selection states
@@ -16,9 +17,11 @@ export default function SharesPage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const load = async () => {
+    setLoading(true); // Start loading
     const res = await fetch("/api/shares");
     const data = await res.json();
     setLinks(Array.isArray(data) ? data : []);
+	setLoading(false); // Stop loading
   };
 
   useEffect(() => { load(); }, []);
