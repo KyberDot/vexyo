@@ -293,6 +293,7 @@ function migrate(db: Database.Database) {
     `ALTER TABLE shared_links ADD COLUMN currency TEXT`,
 	`ALTER TABLE payment_methods ADD COLUMN icon TEXT`,
     `ALTER TABLE payment_methods ADD COLUMN attachments TEXT`,
+	`ALTER TABLE attachments ADD COLUMN method_id INTEGER`,
   ];
   for (const sql of alters) { try { db.exec(sql); } catch {} }
 }
