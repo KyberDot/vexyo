@@ -202,7 +202,7 @@ export default function PaymentsPage() {
                   {balanceAction?.id === m.id && (
                     <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
                       <input className="input" type="number" step="0.01" min="0"
-                        placeholder={`Amount to ${balanceAction.type}`}
+                        placeholder={`Amount to ${balanceAction?.type}`}
                         value={balanceDelta} onChange={e => setBalanceDelta(e.target.value)}
                         autoFocus style={{ flex: 1, height: 34, fontSize: 13 }} />
                       <button onClick={() => updateBalance(m)} className="btn-primary" style={{ padding: "0 12px", fontSize: 13, height: 34, flexShrink: 0 }}>OK</button>
