@@ -75,7 +75,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <button className="btn-primary" onClick={() => setShowModal(true)} style={{ background: accentColor }}>
-          + Add Subscription
+          + Add
         </button>
       </div>
 
@@ -180,7 +180,7 @@ export default function DashboardPage() {
             </div>
             <Link href="/dashboard/subscriptions" style={{ fontSize: 13, color: accentColor, textDecoration: "none", fontWeight: 600 }}>View All →</Link>
           </div>
-          <div style={{ flex: 1, overflowY: "auto", paddingRight: 4 }}>
+          <div style={{ flex: 1, overflowY: "auto", paddingRight: 20, marginRight: -4 }} className="custom-scrollbar">
             {upcomingRenewals.length === 0 ? (
               <div style={{ textAlign: "center", padding: "24px 0", color: "var(--muted)", fontSize: 14 }}>🎉 No renewals in the next 7 days</div>
             ) : upcomingRenewals.map(s => {
