@@ -284,8 +284,8 @@ export default function PaymentsPage() {
             // Credit calculations
             const creditUsed = Number(m.balance) || 0;
             const creditLimit = Number(m.credit_limit) || 0;
-            const creditAvailable = Math.max(0, creditLimit - creditUsed);
-            const creditPct = creditLimit > 0 ? Math.min(100, (creditUsed / creditLimit) * 100) : 0;
+            const creditAvailable = creditLimit - creditUsed;
+            const creditPct = creditLimit > 0 ? (creditUsed / creditLimit) * 100 : 0;
             const creditColor = creditPct > 80 ? "#EF4444" : creditPct > 50 ? "#F59E0B" : creditPct > 0 ? "#F59E0B" : "var(--muted)";
 
             // BNPL calculations
@@ -372,16 +372,18 @@ export default function PaymentsPage() {
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>Available</div>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: "#10B981" }}>{balSym}{fmt(creditAvailable)}</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: creditAvailable < 0 ? "#EF4444" : "#10B981" }}>{creditAvailable < 0 ? "-" : ""}{balSym}{fmt(Math.abs(creditAvailable))}</div>
                         {creditLimit > 0 && <div style={{ fontSize: 10, color: "var(--muted)" }}>of {balSym}{fmt(creditLimit)} limit</div>}
                       </div>
                     </div>
                     {creditLimit > 0 && (
                       <div>
                         <div style={{ height: 6, background: "var(--surface2)", borderRadius: 3, overflow: "hidden" }}>
-                          <div style={{ width: `${creditPct}%`, height: "100%", background: creditColor, borderRadius: 3, transition: "width 0.4s ease" }} />
+                          <div style={{ width: `${Math.min(100, creditPct)}%`, height: "100%", background: creditPct > 100 ? "#EF4444" : creditColor, borderRadius: 3, transition: "width 0.4s ease" }} />
                         </div>
-                        <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 3 }}>{creditPct.toFixed(0)}% used</div>
+                        <div style={{ fontSize: 10, color: creditPct > 100 ? "#EF4444" : "var(--muted)", marginTop: 3, fontWeight: creditPct > 100 ? 700 : 400 }}>
+                          {creditPct > 100 ? `⚠ ${creditPct.toFixed(0)}% — over limit` : `${creditPct.toFixed(0)}% used`}
+                        </div>
                       </div>
                     )}
                     {balanceAction?.id === m.id ? (
