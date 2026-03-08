@@ -256,6 +256,7 @@ export default function PaymentsPage() {
         </div>
       )}
 
+
       {/* Empty state */}
       {methods.length === 0 ? (
         <div className="card" style={{ textAlign: "center", padding: 48 }}>
@@ -271,8 +272,15 @@ export default function PaymentsPage() {
           <div style={{ color: "var(--muted)", fontSize: 13 }}>Try a different search or filter</div>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
-          {filtered.map(m => {
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          {/* Table header */}
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr) minmax(0,1.8fr) minmax(0,0.9fr) 196px", padding: "9px 16px", borderBottom: "1px solid var(--border-color)", background: "var(--surface2)" }}>
+            {["Account", "Type", "Balance / Status", "Spend /mo", ""].map(h => (
+              <div key={h} style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</div>
+            ))}
+          </div>
+
+          {filtered.map((m, i) => {
             const at = ACCOUNT_TYPES.find(a => a.value === m.account_type) || ACCOUNT_TYPES[ACCOUNT_TYPES.length - 1];
             const balSym = CURRENCY_SYMBOLS[m.balance_currency || m.currency] || currencySymbol;
             const hasCustomIcon = m.icon && (m.icon.startsWith("data:") || m.icon.startsWith("http"));
@@ -281,14 +289,12 @@ export default function PaymentsPage() {
             const isBnpl = m.account_type === "bnpl";
             const isDebit = !isCredit && !isBnpl;
 
-            // Credit calculations
             const creditUsed = Number(m.balance) || 0;
             const creditLimit = Number(m.credit_limit) || 0;
             const creditAvailable = creditLimit - creditUsed;
             const creditPct = creditLimit > 0 ? (creditUsed / creditLimit) * 100 : 0;
-            const creditColor = creditPct > 80 ? "#EF4444" : creditPct > 50 ? "#F59E0B" : creditPct > 0 ? "#F59E0B" : "var(--muted)";
+            const creditColor = creditPct > 100 ? "#EF4444" : creditPct > 80 ? "#EF4444" : creditPct > 50 ? "#F59E0B" : creditPct > 0 ? "#F59E0B" : "var(--muted)";
 
-            // BNPL calculations
             const bnplOwed = Number(m.bnpl_owed) || 0;
             const bnplPaid = Number(m.bnpl_paid) || 0;
             const bnplTotal = bnplOwed + bnplPaid;
@@ -297,199 +303,150 @@ export default function PaymentsPage() {
             const bnplUsedPct = bnplLimit ? Math.min(100, (bnplOwed / bnplLimit) * 100) : 0;
             const bnplLimitColor = bnplUsedPct > 80 ? "#EF4444" : bnplUsedPct > 50 ? "#F59E0B" : "#10B981";
 
-            return (
-              <div key={m.id} className="card" style={{ display: "flex", flexDirection: "column", gap: 0, padding: 0, overflow: "hidden" }}>
+            const isExpanded = balanceAction?.id === m.id;
 
-                {/* Card header */}
-                <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--border-color)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, overflow: "hidden", flexShrink: 0 }}>
+            return (
+              <div key={m.id}>
+                {/* Main row */}
+                <div
+                  style={{ display: "grid", gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr) minmax(0,1.8fr) minmax(0,0.9fr) 196px", padding: "11px 16px", borderBottom: isExpanded ? "1px solid rgba(var(--accent-rgb),0.15)" : i < filtered.length - 1 ? "1px solid var(--border-color)" : "none", alignItems: "center", transition: "background 0.1s" }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--surface2)"}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                >
+                  {/* Account name + icon */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 9, background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, overflow: "hidden", flexShrink: 0, border: "1px solid var(--border-color)" }}>
                       {hasCustomIcon
                         ? <img src={m.icon} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" onError={e => ((e.currentTarget as HTMLElement).style.display = "none")} />
                         : (m.icon && m.icon.length <= 4 ? m.icon : at.icon)}
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
-                        {m.label}
-                        {m.is_default && <span style={{ background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)", fontSize: 9, borderRadius: 4, padding: "1px 5px", fontWeight: 800 }}>DEFAULT</span>}
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, display: "flex", alignItems: "center", gap: 5 }}>
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.label}</span>
+                        {m.is_default && <span style={{ background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)", fontSize: 9, borderRadius: 4, padding: "1px 5px", fontWeight: 800, flexShrink: 0 }}>DEFAULT</span>}
                       </div>
-                      <div style={{ fontSize: 11, color: "var(--muted)" }}>{at.label}{m.last4 ? ` •••• ${m.last4}` : ""}</div>
+                      <div style={{ fontSize: 11, color: "var(--muted)" }}>{m.last4 ? `•••• ${m.last4}` : (m.currency || "USD")}</div>
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: "var(--muted)", textAlign: "right" }}>
-                    <div>{m.currency || "USD"}</div>
-                    {spend > 0 && <div style={{ color: "var(--text)", fontWeight: 600 }}>{currencySymbol}{fmt(spend)}/mo</div>}
-                  </div>
-                </div>
 
-                {/* Balance section — debit */}
-                {isDebit && (
-                  <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+                  {/* Type */}
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{at.label}</div>
+
+                  {/* Balance / status column */}
+                  <div style={{ minWidth: 0 }}>
+                    {isDebit && (
                       <div>
-                        <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>Balance</div>
-                        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.5px" }}>
-                          {balSym}{fmt(m.balance || 0)}
-                        </div>
+                        <div style={{ fontWeight: 700, fontSize: 14 }}>{balSym}{fmt(m.balance || 0)}</div>
                         {(m.balance_currency || m.currency) !== settings.currency && (
-                          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 1 }}>
-                            ≈ {currencySymbol}{fmt(convertToDisplay(m.balance || 0, m.balance_currency || m.currency))}
-                          </div>
+                          <div style={{ fontSize: 11, color: "var(--muted)" }}>≈ {currencySymbol}{fmt(convertToDisplay(m.balance || 0, m.balance_currency || m.currency))}</div>
                         )}
                       </div>
-                    </div>
-                    {balanceAction?.id === m.id ? (
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <input className="input" type="number" step="0.01" min="0"
-                          placeholder={`Amount to ${balanceAction?.type ?? "adjust"}`}
-                          value={balanceDelta} onChange={e => setBalanceDelta(e.target.value)}
-                          autoFocus style={{ flex: 1, height: 34, fontSize: 13 }} />
-                        <button onClick={() => updateBalance(m)} className="btn-primary" style={{ padding: "0 12px", fontSize: 13, height: 34, flexShrink: 0 }}>OK</button>
-                        <button onClick={() => setBalanceAction(null)} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 16, padding: "0 4px" }}>✕</button>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <button onClick={() => { setBalanceAction({ id: m.id, type: "add" }); setBalanceDelta(""); }}
-                          style={{ flex: 1, padding: "6px 0", borderRadius: 7, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.07)", color: "#10B981", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
-                          + Add
-                        </button>
-                        <button onClick={() => { setBalanceAction({ id: m.id, type: "remove" }); setBalanceDelta(""); }}
-                          style={{ flex: 1, padding: "6px 0", borderRadius: 7, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.07)", color: "#EF4444", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
-                          − Remove
-                        </button>
+                    )}
+                    {isCredit && (
+                      <div>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
+                          <span style={{ fontWeight: 700, fontSize: 14, color: creditUsed > 0 ? creditColor : "var(--text)" }}>{balSym}{fmt(creditUsed)} used</span>
+                          {creditLimit > 0 && (
+                            <span style={{ fontSize: 11, color: creditAvailable < 0 ? "#EF4444" : "#10B981", fontWeight: 600 }}>
+                              {creditAvailable < 0 ? `−${balSym}${fmt(Math.abs(creditAvailable))} over` : `${balSym}${fmt(creditAvailable)} avail`}
+                            </span>
+                          )}
+                        </div>
+                        {creditLimit > 0 && (
+                          <div style={{ marginTop: 5, height: 4, background: "var(--surface2)", borderRadius: 2, overflow: "hidden", maxWidth: 160 }}>
+                            <div style={{ width: `${Math.min(100, creditPct)}%`, height: "100%", background: creditColor, borderRadius: 2, transition: "width 0.4s" }} />
+                          </div>
+                        )}
+                        {creditPct > 100 && <div style={{ fontSize: 10, color: "#EF4444", fontWeight: 700, marginTop: 2 }}>⚠ Over limit</div>}
                       </div>
                     )}
-                  </div>
-                )}
-
-                {/* Balance section — credit */}
-                {isCredit && (
-                  <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    {isBnpl && (
                       <div>
-                        <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>Used</div>
-                        <div style={{ fontSize: 22, fontWeight: 800, color: creditUsed > 0 ? creditColor : "var(--text)" }}>{balSym}{fmt(creditUsed)}</div>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>Available</div>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: creditAvailable < 0 ? "#EF4444" : "#10B981" }}>{creditAvailable < 0 ? "-" : ""}{balSym}{fmt(Math.abs(creditAvailable))}</div>
-                        {creditLimit > 0 && <div style={{ fontSize: 10, color: "var(--muted)" }}>of {balSym}{fmt(creditLimit)} limit</div>}
-                      </div>
-                    </div>
-                    {creditLimit > 0 && (
-                      <div>
-                        <div style={{ height: 6, background: "var(--surface2)", borderRadius: 3, overflow: "hidden" }}>
-                          <div style={{ width: `${Math.min(100, creditPct)}%`, height: "100%", background: creditPct > 100 ? "#EF4444" : creditColor, borderRadius: 3, transition: "width 0.4s ease" }} />
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
+                          <span style={{ fontWeight: 700, fontSize: 14, color: bnplOwed > 0 ? "#EF4444" : "var(--text)" }}>{balSym}{fmt(bnplOwed)} owed</span>
+                          <span style={{ fontSize: 11, color: "#10B981", fontWeight: 600 }}>{balSym}{fmt(bnplPaid)} paid</span>
                         </div>
-                        <div style={{ fontSize: 10, color: creditPct > 100 ? "#EF4444" : "var(--muted)", marginTop: 3, fontWeight: creditPct > 100 ? 700 : 400 }}>
-                          {creditPct > 100 ? `⚠ ${creditPct.toFixed(0)}% — over limit` : `${creditPct.toFixed(0)}% used`}
-                        </div>
-                      </div>
-                    )}
-                    {balanceAction?.id === m.id ? (
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <input className="input" type="number" step="0.01" min="0"
-                          placeholder="Amount"
-                          value={balanceDelta} onChange={e => setBalanceDelta(e.target.value)}
-                          autoFocus style={{ flex: 1, height: 34, fontSize: 13 }} />
-                        <button onClick={() => updateBalance(m)} className="btn-primary" style={{ padding: "0 12px", fontSize: 13, height: 34, flexShrink: 0 }}>OK</button>
-                        <button onClick={() => setBalanceAction(null)} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 16, padding: "0 4px" }}>✕</button>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <button onClick={() => { setBalanceAction({ id: m.id, type: "add" }); setBalanceDelta(""); }}
-                          style={{ flex: 1, padding: "6px 0", borderRadius: 7, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.07)", color: "#EF4444", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
-                          + Charge
-                        </button>
-                        <button onClick={() => { setBalanceAction({ id: m.id, type: "remove" }); setBalanceDelta(""); }}
-                          style={{ flex: 1, padding: "6px 0", borderRadius: 7, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.07)", color: "#10B981", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
-                          − Pay Off
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Balance section — BNPL */}
-                {isBnpl && (
-                  <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <div>
-                        <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>Owed</div>
-                        <div style={{ fontSize: 22, fontWeight: 800, color: bnplOwed > 0 ? "#EF4444" : "var(--text)" }}>{balSym}{fmt(bnplOwed)}</div>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>Paid</div>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: "#10B981" }}>{balSym}{fmt(bnplPaid)}</div>
-                      </div>
-                    </div>
-
-                    {/* Limit bar — if limit set */}
-                    {bnplLimit ? (
-                      <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--muted)", marginBottom: 3 }}>
-                          <span>Limit: {balSym}{fmt(bnplLimit)}</span>
-                          <span style={{ color: bnplLimitColor }}>{bnplUsedPct.toFixed(0)}% used</span>
-                        </div>
-                        <div style={{ height: 6, background: "var(--surface2)", borderRadius: 3, overflow: "hidden" }}>
-                          <div style={{ width: `${bnplUsedPct}%`, height: "100%", background: bnplLimitColor, borderRadius: 3, transition: "width 0.4s ease" }} />
-                        </div>
+                        {bnplTotal > 0 && (
+                          <div style={{ marginTop: 5, height: 4, background: "var(--surface2)", borderRadius: 2, overflow: "hidden", maxWidth: 160 }}>
+                            <div style={{ width: `${bnplPct}%`, height: "100%", background: "#10B981", borderRadius: 2, transition: "width 0.4s" }} />
+                          </div>
+                        )}
                         <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>
-                          {balSym}{fmt(Math.max(0, bnplLimit - bnplOwed))} available
+                          {bnplLimit ? `Limit: ${balSym}${fmt(bnplLimit)}` : "♾️ Flexible"}
                         </div>
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: 10, color: "var(--muted)", display: "flex", alignItems: "center", gap: 4 }}>
-                        <span>♾️</span> Flexible limit
-                      </div>
-                    )}
-
-                    {/* Repayment progress */}
-                    {bnplTotal > 0 && (
-                      <div>
-                        <div style={{ height: 4, background: "var(--surface2)", borderRadius: 2, overflow: "hidden" }}>
-                          <div style={{ width: `${bnplPct}%`, height: "100%", background: "#10B981", borderRadius: 2, transition: "width 0.4s ease" }} />
-                        </div>
-                        <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>{bnplPct.toFixed(0)}% repaid of total</div>
-                      </div>
-                    )}
-
-                    {balanceAction?.id === m.id ? (
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <input className="input" type="number" step="0.01" min="0"
-                          placeholder="Amount"
-                          value={balanceDelta} onChange={e => setBalanceDelta(e.target.value)}
-                          autoFocus style={{ flex: 1, height: 34, fontSize: 13 }} />
-                        <button onClick={() => updateBalance(m)} className="btn-primary" style={{ padding: "0 12px", fontSize: 13, height: 34, flexShrink: 0 }}>OK</button>
-                        <button onClick={() => setBalanceAction(null)} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 16, padding: "0 4px" }}>✕</button>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <button onClick={() => { setBalanceAction({ id: m.id, type: "owed" }); setBalanceDelta(""); }}
-                          style={{ flex: 1, padding: "6px 0", borderRadius: 7, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.07)", color: "#EF4444", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
-                          + Add Owed
-                        </button>
-                        <button onClick={() => { setBalanceAction({ id: m.id, type: "paid" }); setBalanceDelta(""); }}
-                          style={{ flex: 1, padding: "6px 0", borderRadius: 7, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.07)", color: "#10B981", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
-                          ✓ Mark Paid
-                        </button>
                       </div>
                     )}
                   </div>
-                )}
 
-                {/* Footer actions */}
-                <div style={{ padding: "10px 16px", borderTop: "1px solid var(--border-color)", display: "flex", gap: 6, alignItems: "center" }}>
-                  <button className="btn-ghost" style={{ fontSize: 12, padding: "5px 10px" }} onClick={() => openEdit(m)}>✏️ Edit</button>
-                  <AttachmentsPanel methodId={m.id} label="Docs" />
-                  {!m.is_default && (
-                    <button className="btn-ghost" style={{ fontSize: 12, padding: "5px 10px" }} onClick={() => setDefault(m.id)}>Set Default</button>
-                  )}
-                  <button onClick={() => del(m.id, m.label)}
-                    style={{ background: "none", border: "none", color: "#EF4444", cursor: "pointer", fontSize: 15, padding: "5px 6px", marginLeft: "auto" }}>
-                    🗑️
-                  </button>
+                  {/* Monthly spend */}
+                  <div style={{ fontSize: 13, fontWeight: spend > 0 ? 700 : 400, color: spend > 0 ? "var(--text)" : "var(--muted)" }}>
+                    {spend > 0 ? `${currencySymbol}${fmt(spend)}` : "—"}
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 3, justifyContent: "flex-end" }}>
+                    {!isExpanded && isDebit && (
+                      <>
+                        <button onClick={() => { setBalanceAction({ id: m.id, type: "add" }); setBalanceDelta(""); }}
+                          style={{ padding: "4px 9px", borderRadius: 6, border: "1px solid rgba(16,185,129,0.35)", background: "rgba(16,185,129,0.07)", color: "#10B981", fontSize: 11, cursor: "pointer", fontWeight: 700, lineHeight: 1.4 }}>+ Add</button>
+                        <button onClick={() => { setBalanceAction({ id: m.id, type: "remove" }); setBalanceDelta(""); }}
+                          style={{ padding: "4px 9px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.07)", color: "#EF4444", fontSize: 11, cursor: "pointer", fontWeight: 700, lineHeight: 1.4 }}>− Remove</button>
+                      </>
+                    )}
+                    {!isExpanded && isCredit && (
+                      <>
+                        <button onClick={() => { setBalanceAction({ id: m.id, type: "add" }); setBalanceDelta(""); }}
+                          style={{ padding: "4px 9px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.07)", color: "#EF4444", fontSize: 11, cursor: "pointer", fontWeight: 700, lineHeight: 1.4 }}>+ Charge</button>
+                        <button onClick={() => { setBalanceAction({ id: m.id, type: "remove" }); setBalanceDelta(""); }}
+                          style={{ padding: "4px 9px", borderRadius: 6, border: "1px solid rgba(16,185,129,0.35)", background: "rgba(16,185,129,0.07)", color: "#10B981", fontSize: 11, cursor: "pointer", fontWeight: 700, lineHeight: 1.4 }}>− Pay Off</button>
+                      </>
+                    )}
+                    {!isExpanded && isBnpl && (
+                      <>
+                        <button onClick={() => { setBalanceAction({ id: m.id, type: "owed" }); setBalanceDelta(""); }}
+                          style={{ padding: "4px 9px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.07)", color: "#EF4444", fontSize: 11, cursor: "pointer", fontWeight: 700, lineHeight: 1.4 }}>+ Owed</button>
+                        <button onClick={() => { setBalanceAction({ id: m.id, type: "paid" }); setBalanceDelta(""); }}
+                          style={{ padding: "4px 9px", borderRadius: 6, border: "1px solid rgba(16,185,129,0.35)", background: "rgba(16,185,129,0.07)", color: "#10B981", fontSize: 11, cursor: "pointer", fontWeight: 700, lineHeight: 1.4 }}>✓ Paid</button>
+                      </>
+                    )}
+                    <div style={{ width: 1, height: 14, background: "var(--border-color)", margin: "0 3px", flexShrink: 0 }} />
+                    <AttachmentsPanel methodId={m.id} label="" />
+                    <button title="Edit" onClick={() => openEdit(m)}
+                      style={{ width: 26, height: 26, borderRadius: 6, border: "1px solid var(--border-color)", background: "none", cursor: "pointer", color: "var(--muted)", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✏️</button>
+                    {!m.is_default && (
+                      <button title="Set default" onClick={() => setDefault(m.id)}
+                        style={{ width: 26, height: 26, borderRadius: 6, border: "1px solid var(--border-color)", background: "none", cursor: "pointer", color: "var(--muted)", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>⭐</button>
+                    )}
+                    <button title="Delete" onClick={() => del(m.id, m.label)}
+                      style={{ width: 26, height: 26, borderRadius: 6, border: "1px solid rgba(239,68,68,0.25)", background: "none", cursor: "pointer", color: "#EF4444", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>🗑️</button>
+                  </div>
                 </div>
+
+                {/* Inline balance input — slides open below the row */}
+                {isExpanded && (
+                  <div style={{ padding: "12px 16px 14px 62px", borderBottom: i < filtered.length - 1 ? "1px solid var(--border-color)" : "none", background: "rgba(var(--accent-rgb),0.03)" }}>
+                    <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 8, fontWeight: 600 }}>
+                      {balanceAction?.type === "add" && isDebit && "Add funds"}
+                      {balanceAction?.type === "remove" && isDebit && "Remove funds"}
+                      {balanceAction?.type === "add" && isCredit && "Record a charge"}
+                      {balanceAction?.type === "remove" && isCredit && "Record a payment"}
+                      {balanceAction?.type === "owed" && "Add to owed balance"}
+                      {balanceAction?.type === "paid" && "Mark amount as paid"}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, maxWidth: 380 }}>
+                      <input className="input" type="number" step="0.01" min="0"
+                        placeholder="0.00"
+                        value={balanceDelta}
+                        onChange={e => setBalanceDelta(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") updateBalance(m); if (e.key === "Escape") setBalanceAction(null); }}
+                        autoFocus
+                        style={{ flex: 1, height: 36, fontSize: 13 }}
+                      />
+                      <button onClick={() => updateBalance(m)} className="btn-primary" style={{ padding: "0 18px", fontSize: 13, height: 36, flexShrink: 0 }}>Confirm</button>
+                      <button onClick={() => setBalanceAction(null)} style={{ background: "none", border: "1px solid var(--border-color)", borderRadius: 7, color: "var(--muted)", cursor: "pointer", fontSize: 13, padding: "0 12px", height: 36, flexShrink: 0 }}>Cancel</button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
