@@ -300,6 +300,11 @@ function migrate(db: Database.Database) {
     `ALTER TABLE attachments ADD COLUMN debt_id INTEGER`,
     `ALTER TABLE debts ADD COLUMN term TEXT DEFAULT 'short'`,
 	`ALTER TABLE subscriptions ADD COLUMN direct_debit INTEGER DEFAULT 0`,
+	`ALTER TABLE payment_methods ADD COLUMN credit_limit REAL`,
+    `ALTER TABLE payment_methods ADD COLUMN bnpl_owed REAL DEFAULT 0`,
+    `ALTER TABLE payment_methods ADD COLUMN bnpl_paid REAL DEFAULT 0`,
+	`ALTER TABLE payment_methods ADD COLUMN bnpl_limit REAL`,
+    `ALTER TABLE payment_methods ADD COLUMN bnpl_flexible INTEGER DEFAULT 0`,
   ];
   for (const sql of alters) { try { db.exec(sql); } catch {} }
 }

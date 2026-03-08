@@ -23,21 +23,34 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const userId = await getUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { label, type, last4, brand, icon, account_type, currency, balance_currency, balance, is_default, attachments } = await req.json();
+  const {
+    label, type, last4, brand, icon, account_type,
+    currency, balance_currency, balance, is_default, attachments,
+    credit_limit, bnpl_limit, bnpl_flexible, bnpl_owed, bnpl_paid, member_id,
+  } = await req.json();
   if (!label) return NextResponse.json({ error: "Label required" }, { status: 400 });
   const db = getDb();
   if (is_default) db.prepare("UPDATE payment_methods SET is_default = 0 WHERE user_id = ?").run(userId);
   const r = db.prepare(`
     INSERT INTO payment_methods (
       user_id, label, type, last4, brand, icon,
-      account_type, currency, balance_currency, balance, is_default, attachments
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      account_type, currency, balance_currency, balance, is_default, attachments,
+      credit_limit, bnpl_limit, bnpl_flexible, bnpl_owed, bnpl_paid, member_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     userId, label, type || "card", last4 || null, brand || null, icon || null,
-    account_type || "other", currency || "USD",
+    account_type || "other",
+    currency || "USD",
     balance_currency || currency || "USD",
-    Number(balance) || 0, is_default ? 1 : 0,
-    attachments ? JSON.stringify(attachments) : "[]"
+    Number(balance) || 0,
+    is_default ? 1 : 0,
+    attachments ? JSON.stringify(attachments) : "[]",
+    credit_limit != null ? Number(credit_limit) : null,
+    bnpl_limit != null ? Number(bnpl_limit) : null,
+    bnpl_flexible ? 1 : 0,
+    bnpl_owed != null ? Number(bnpl_owed) : null,
+    bnpl_paid != null ? Number(bnpl_paid) : null,
+    member_id || null,
   );
   const m = db.prepare("SELECT * FROM payment_methods WHERE id = ?").get(r.lastInsertRowid) as any;
   return NextResponse.json({ ...m, attachments: m.attachments ? JSON.parse(m.attachments) : [] }, { status: 201 });

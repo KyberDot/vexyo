@@ -15,15 +15,25 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const body = await req.json();
   const db = getDb();
   if (body.is_default) db.prepare("UPDATE payment_methods SET is_default = 0 WHERE user_id = ?").run(userId);
+  const fields = [
+    "label", "type", "last4", "brand", "icon",
+    "account_type", "currency", "balance_currency", "balance",
+    "is_default", "member_id",
+    "credit_limit", "bnpl_limit", "bnpl_flexible", "bnpl_owed", "bnpl_paid",
+  ];
   const updates: string[] = [];
   const values: any[] = [];
-  for (const f of ["label", "type", "last4", "brand", "icon", "account_type", "currency", "balance_currency", "balance", "is_default", "member_id"]) {
-    if (f in body) { updates.push(`${f} = ?`); values.push(typeof body[f] === "boolean" ? (body[f] ? 1 : 0) : body[f]); }
+  for (const f of fields) {
+    if (f in body) {
+      updates.push(`${f} = ?`);
+      values.push(typeof body[f] === "boolean" ? (body[f] ? 1 : 0) : body[f]);
+    }
   }
   if (!updates.length) return NextResponse.json({ error: "No fields" }, { status: 400 });
   values.push(params.id, userId);
   db.prepare(`UPDATE payment_methods SET ${updates.join(", ")} WHERE id = ? AND user_id = ?`).run(...values);
-  return NextResponse.json(db.prepare("SELECT * FROM payment_methods WHERE id = ?").get(params.id));
+  const m = db.prepare("SELECT * FROM payment_methods WHERE id = ?").get(params.id) as any;
+  return NextResponse.json({ ...m, attachments: m.attachments ? JSON.parse(m.attachments) : [] });
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
